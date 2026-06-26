@@ -26,6 +26,7 @@ local defaults = {
     mapScale = 1.0,
     movingOpacity = 1.0,
     stationaryOpacity = 1.0,
+    hideBorder = false,
 }
 
 local function Print(msg)
@@ -71,9 +72,20 @@ local function SlashHandler(msg)
     cmd = cmd or ""
     
     if cmd == "toggle" and arg then
-        if defaults[arg] ~= nil then
-            CartoMapperDB[arg] = not CartoMapperDB[arg]
-            Print(arg .. " is now " .. (CartoMapperDB[arg] and "|cff00ff00Enabled|r" or "|cffff0000Disabled|r") .. ". Please /reload to apply changes.")
+        local dbKey = arg
+        if arg == "border" then
+            dbKey = "hideBorder"
+        end
+        if defaults[dbKey] ~= nil then
+            CartoMapperDB[dbKey] = not CartoMapperDB[dbKey]
+            if dbKey == "hideBorder" and CartoMapper.modules["zoom"] and CartoMapper.modules["zoom"].UpdateBorderVisibility then
+                CartoMapper.modules["zoom"].UpdateBorderVisibility()
+            end
+            if dbKey == "hideBorder" then
+                Print("border is now " .. (CartoMapperDB.hideBorder and "|cff00ff00Hidden|r" or "|cffff0000Shown|r") .. ".")
+            else
+                Print(arg .. " is now " .. (CartoMapperDB[dbKey] and "|cff00ff00Enabled|r" or "|cffff0000Disabled|r") .. ". Please /reload to apply changes.")
+            end
         else
             Print("Unknown toggle option: " .. arg)
         end
@@ -81,13 +93,18 @@ local function SlashHandler(msg)
         Print("Current Settings:")
         for k, v in pairs(defaults) do
             if type(v) == "boolean" then
-                DEFAULT_CHAT_FRAME:AddMessage("  " .. k .. ": " .. (CartoMapperDB[k] and "|cff00ff00On|r" or "|cffff0000Off|r"))
+                local displayKey = k
+                local displayVal = CartoMapperDB[k]
+                if k == "hideBorder" then
+                    displayKey = "border (hidden)"
+                end
+                DEFAULT_CHAT_FRAME:AddMessage("  " .. displayKey .. ": " .. (displayVal and "|cff00ff00On|r" or "|cffff0000Off|r"))
             end
         end
     else
         Print("Available Commands:")
         DEFAULT_CHAT_FRAME:AddMessage("  /cm status - Show current settings status")
-        DEFAULT_CHAT_FRAME:AddMessage("  /cm toggle <option> - Toggle a module. Options: zoom, coords, battlemap, groupicons, fogclear, pois")
+        DEFAULT_CHAT_FRAME:AddMessage("  /cm toggle <option> - Toggle a module. Options: zoom, coords, battlemap, groupicons, fogclear, pois, border")
         DEFAULT_CHAT_FRAME:AddMessage("  /reload - Reload interface to apply changes")
     end
 end
