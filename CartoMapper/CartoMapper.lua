@@ -110,6 +110,7 @@ function CartoMapper:OnEvent(event, arg1)
         CreateMinimapButton()
 
         Print("Loaded! Click the minimap button or type /cm to open options.")
+        Print("Like this addon? Support development at |cffffd700buymeacoffee.com/zendevve|r")
     end
 end
 
