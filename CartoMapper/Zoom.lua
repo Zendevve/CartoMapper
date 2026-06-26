@@ -27,6 +27,21 @@ local function SetPOIMaxBounds()
     WorldMapScrollFrame.maxX = WorldMapDetailFrame:GetWidth() * WORLDMAP_SETTINGS.size + 12
 end
 
+local function UpdateDetailTilesVisibility()
+    local numTiles = NUM_WORLDMAP_DETAIL_TILES or 12
+    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapperDB.borderless and GetCurrentMapZone() > 0 and (GetNumMapOverlays() > 0 or CartoMapperDB.fogClear) then
+        for i = 1, numTiles do
+            local tile = _G["WorldMapDetailTile" .. i]
+            if tile then tile:Hide() end
+        end
+    else
+        for i = 1, numTiles do
+            local tile = _G["WorldMapDetailTile" .. i]
+            if tile then tile:Show() end
+        end
+    end
+end
+
 local function SetDetailFrameScale(scale)
     WorldMapDetailFrame:SetScale(scale)
     SetPOIMaxBounds()
@@ -207,6 +222,9 @@ local function SetupWorldMapFrame()
         WorldMapFrameSizeUpButton:Show()
         WorldMapFrameSizeDownButton:Hide()
     end
+
+    -- Update detail tiles visibility for landmass borderless mask
+    UpdateDetailTilesVisibility()
 end
 
 -- Mouse Scroll Zoom Handler
@@ -603,6 +621,7 @@ function Zoom.Enable()
     hooksecurefunc("WorldMap_ToggleSizeUp", SetupWorldMapFrame)
     hooksecurefunc("WorldMapFrame_UpdateQuests", ResizeQuestPOIs)
     hooksecurefunc("WorldMapFrame_SetPOIMaxBounds", SetPOIMaxBounds)
+    hooksecurefunc("WorldMapFrame_Update", UpdateDetailTilesVisibility)
 
     -- Correct positioning of the quest objectives checkbox in minimized view
     hooksecurefunc("WorldMapQuestShowObjectives_AdjustPosition", function()
