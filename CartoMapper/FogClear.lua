@@ -1165,6 +1165,47 @@ local function UpdateBattlefieldMinimapOverlays()
     UpdateOverlayTextures(BattlefieldMinimap, "BattlefieldMinimapOverlay%d", scale, BattlefieldMinimapOptions.opacity)
 end
 
+function CartoMapper.UpdateFogClearSettings()
+    UpdateWorldMapOverlays()
+    UpdateBattlefieldMinimapOverlays()
+end
+
+function CartoMapper.OpenFogColorPicker()
+    local function ColorCallback(restore)
+        local r, g, b
+        if restore then
+            r, g, b = restore.r, restore.g, restore.b
+        else
+            r, g, b = ColorPickerFrame:GetColorRGB()
+        end
+        CartoMapperDB.fogR = r
+        CartoMapperDB.fogG = g
+        CartoMapperDB.fogB = b
+        CartoMapperDB.fogColorStyle = 2 -- Custom color style
+        CartoMapper.UpdateFogClearSettings()
+    end
+
+    local function OpacityCallback()
+        local alpha = opacityFunc and opacityFunc() or (1 - ColorPickerFrame:GetOpacity())
+        CartoMapperDB.fogTransparency = alpha
+        CartoMapper.UpdateFogClearSettings()
+    end
+
+    ColorPickerFrame.func = ColorCallback
+    ColorPickerFrame.hasOpacity = true
+    ColorPickerFrame.opacityFunc = OpacityCallback
+    ColorPickerFrame.opacity = 1 - (CartoMapperDB.fogTransparency or 0.7)
+    
+    local r, g, b = CartoMapperDB.fogR or 0.2, CartoMapperDB.fogG or 0.6, CartoMapperDB.fogB or 1.0
+    ColorPickerFrame:SetColorRGB(r, g, b)
+    
+    -- Setup fallback restore values
+    ColorPickerFrame.previousValues = {r = r, g = g, b = b, opacity = ColorPickerFrame.opacity}
+    ColorPickerFrame.cancelFunc = ColorCallback
+    
+    ShowUIPanel(ColorPickerFrame)
+end
+
 function FogClear.Enable()
     -- Hook GetNumMapOverlays to return 0 when overlays are initialized
     -- This prevents default Blizzard UI from drawing standard overlays

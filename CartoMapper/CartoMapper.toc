@@ -6,6 +6,7 @@
 ## SavedVariables: CartoMapperDB
 
 CartoMapper.lua
+ZoneInfo.lua
 Coords.lua
 BattleMap.lua
 GroupIcons.lua

@@ -7,6 +7,48 @@ Also handles Ctrl + Scroll windowed map scaling and inverse scale correction for
 local Zoom = {}
 CartoMapper.modules["zoom"] = Zoom
 
+function CartoMapper.UpdateClickThrough()
+    local state = not (WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapperDB.clickThrough)
+    WorldMapFrame:EnableMouse(state)
+    WorldMapScrollFrame:EnableMouse(state)
+    WorldMapButton:EnableMouse(state)
+end
+
+local currentAlpha = 1.0
+function CartoMapper.UpdateMapOpacity()
+    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
+        local speed = GetUnitSpeed("player")
+        local moving = (speed > 0)
+        local targetAlpha = moving and (CartoMapperDB.movingOpacity or 0.5) or (CartoMapperDB.stationaryOpacity or 1.0)
+        WorldMapFrame:SetAlpha(targetAlpha)
+        currentAlpha = targetAlpha
+    else
+        WorldMapFrame:SetAlpha(1.0)
+    end
+end
+
+local faderFrame = CreateFrame("Frame")
+faderFrame:SetScript("OnUpdate", function(self, elapsed)
+    if WORLDMAP_SETTINGS.size ~= WORLDMAP_WINDOWED_SIZE then
+        WorldMapFrame:SetAlpha(1.0)
+        return
+    end
+    
+    local speed = GetUnitSpeed("player")
+    local moving = (speed > 0)
+    local targetAlpha = moving and (CartoMapperDB.movingOpacity or 0.5) or (CartoMapperDB.stationaryOpacity or 1.0)
+    
+    if currentAlpha ~= targetAlpha then
+        local step = elapsed * 3
+        if currentAlpha < targetAlpha then
+            currentAlpha = math.min(targetAlpha, currentAlpha + step)
+        else
+            currentAlpha = math.max(targetAlpha, currentAlpha - step)
+        end
+        WorldMapFrame:SetAlpha(currentAlpha)
+    end
+end)
+
 local MAX_ZOOM = 4.0
 local ZOOM_STEP = 0.1
 local MIN_ZOOM = 1.0
@@ -138,8 +180,7 @@ end
 
 local function SetupWorldMapFrame()
     WorldMapScrollFrameScrollBar:Hide()
-    WorldMapFrame:EnableMouse(true)
-    WorldMapScrollFrame:EnableMouse(true)
+    CartoMapper.UpdateClickThrough()
     WorldMapScrollFrame.panning = false
     WorldMapScrollFrame.moved = false
 
@@ -185,7 +226,7 @@ local function SetupWorldMapFrame()
     WorldMapScrollFrame:SetVerticalScroll(0)
 
     -- Persist zoom across reopenings of the same zone
-    if GetCurrentMapZone() == PreviousState.zone then
+    if CartoMapperDB.rememberZoom and GetCurrentMapZone() == PreviousState.zone then
         SetDetailFrameScale(PreviousState.scale)
         WorldMapScrollFrame:SetHorizontalScroll(PreviousState.panX)
         WorldMapScrollFrame:SetVerticalScroll(PreviousState.panY)
@@ -373,7 +414,11 @@ local function WorldMapButton_OnUpdate(self, elapsed)
 
     WorldMapFrame.areaName = name
     if not WorldMapFrame.poiHighlight then
-        WorldMapFrameAreaLabel:SetText(name)
+        if name and CartoMapper.GetFormattedZoneLevelText then
+            WorldMapFrameAreaLabel:SetText(CartoMapper.GetFormattedZoneLevelText(name))
+        else
+            WorldMapFrameAreaLabel:SetText(name)
+        end
     end
     if fileName then
         WorldMapHighlight:SetTexCoord(0, texPercentageX, 0, texPercentageY)
