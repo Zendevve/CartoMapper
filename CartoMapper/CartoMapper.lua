@@ -17,8 +17,8 @@ local defaults = {
     fogClear = true,
     pois = true,
     -- Fog clear settings
-    fogColorStyle = 0,     -- 0: Blue/Emerald, 1: Normal, 2: Custom
-    fogTransparency = 0.5, -- Unexplored area opacity
+    fogColorStyle = 1,     -- 0: Blue/Emerald, 1: Normal, 2: Custom
+    fogTransparency = 0.7, -- Unexplored area opacity
     fogR = 0.2,
     fogG = 0.6,
     fogB = 1.0,
@@ -42,6 +42,12 @@ function CartoMapper:OnEvent(event, arg1)
             if CartoMapperDB[k] == nil then
                 CartoMapperDB[k] = v
             end
+        end
+
+        -- Migrate old defaults (Blue/Emerald tint) to new standard Normal style
+        if CartoMapperDB.fogColorStyle == 0 and CartoMapperDB.fogR == 0.2 and CartoMapperDB.fogG == 0.6 and CartoMapperDB.fogB == 1.0 then
+            CartoMapperDB.fogColorStyle = 1
+            CartoMapperDB.fogTransparency = 0.7
         end
 
         -- Initialize all loaded modules
