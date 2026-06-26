@@ -80,7 +80,7 @@ CartoMapper:SetScript("OnEvent", CartoMapper.OnEvent)
 
 -- Config Frame creation logic
 local configFrame
-local function CreateConfigFrame()
+function CreateConfigFrame()
     if configFrame then return end
 
     configFrame = CreateFrame("Frame", "CartoMapperConfigFrame", UIParent)
