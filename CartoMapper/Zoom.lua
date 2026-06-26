@@ -88,6 +88,12 @@ local function SetDetailFrameScale(scale)
     WorldMapDetailFrame:SetScale(scale)
     SetPOIMaxBounds()
 
+    if WorldMapScrollFrame then
+        WorldMapScrollFrame.zoomedIn = (scale > MIN_ZOOM)
+        WorldMapScrollFrame.maxX = ((WorldMapDetailFrame:GetWidth() * scale) - WorldMapScrollFrame:GetWidth()) / scale
+        WorldMapScrollFrame.maxY = ((WorldMapDetailFrame:GetHeight() * scale) - WorldMapScrollFrame:GetHeight()) / scale
+    end
+
     -- Correct scaling on map sub-elements so they do not bloat when zoomed in
     local invScale = 1 / scale
     WorldMapPOIFrame:SetScale(1 / WORLDMAP_SETTINGS.size)
@@ -305,10 +311,6 @@ local function WorldMapScrollFrame_OnMouseWheel(self, delta)
     newScale = math.min(MAX_ZOOM, newScale)
 
     SetDetailFrameScale(newScale)
-
-    WorldMapScrollFrame.maxX = ((WorldMapDetailFrame:GetWidth() * newScale) - WorldMapScrollFrame:GetWidth()) / newScale
-    WorldMapScrollFrame.maxY = ((WorldMapDetailFrame:GetHeight() * newScale) - WorldMapScrollFrame:GetHeight()) / newScale
-    WorldMapScrollFrame.zoomedIn = WorldMapDetailFrame:GetScale() > MIN_ZOOM
 
     local centerX = oldScrollH + frameX / oldScale
     local centerY = oldScrollV + frameY / oldScale
