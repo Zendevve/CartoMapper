@@ -35,6 +35,23 @@ local defaults = {
     stationaryOpacity = 1.0,
 }
 
+local callbacks = {
+    borderless = function(val)
+        if CartoMapper.UpdateBorderless then CartoMapper.UpdateBorderless() end
+    end,
+    clickThrough = function(val)
+        if CartoMapper.UpdateClickThrough then CartoMapper.UpdateClickThrough() end
+    end,
+    minimapButton = function(val)
+        if CartoMapperMinimapButton then
+            if val then CartoMapperMinimapButton:Show() else CartoMapperMinimapButton:Hide() end
+        end
+    end,
+    fogClear = function(val)
+        if CartoMapper.UpdateFogClearSettings then CartoMapper.UpdateFogClearSettings() end
+    end,
+}
+
 local function Print(msg)
     DEFAULT_CHAT_FRAME:AddMessage("|cff00ffb0[CartoMapper]|r: " .. msg)
 end
@@ -192,21 +209,13 @@ function CreateConfigFrame()
     AddCheckbox(modulesBox, "Coordinates", "coords", "Displays cursor and player coordinates on map bottom.", 1, 2)
     AddCheckbox(modulesBox, "Battlefield Minimap *", "battleMap", "Enhances Battlefield Minimap (Shift+M) to look clean.", 1, 3)
     AddCheckbox(modulesBox, "Group & Raid Icons *", "groupIcons", "Enables class-colored group and raid icons on map.", 1, 4)
-    AddCheckbox(modulesBox, "Clear Fog of War *", "fogClear", "Reveals unexplored map overlays with custom opacity/tints.", 1, 5, function(val)
-        if CartoMapper.UpdateFogClearSettings then CartoMapper.UpdateFogClearSettings() end
-    end)
+    AddCheckbox(modulesBox, "Clear Fog of War *", "fogClear", "Reveals unexplored map overlays with custom opacity/tints.", 1, 5, callbacks.fogClear)
     AddCheckbox(modulesBox, "Points of Interest *", "pois", "Shows dungeons and flight paths on World Map.", 1, 6)
 
-    AddCheckbox(modulesBox, "Borderless Mode", "borderless", "Hides windowed map borders and art frames.", 2, 1)
-    AddCheckbox(modulesBox, "Click-Through Map", "clickThrough", "Allows clicking through windowed map when it's open.", 2, 2, function(val)
-        if CartoMapper.UpdateClickThrough then CartoMapper.UpdateClickThrough() end
-    end)
+    AddCheckbox(modulesBox, "Borderless Mode", "borderless", "Hides windowed map borders and art frames.", 2, 1, callbacks.borderless)
+    AddCheckbox(modulesBox, "Click-Through Map", "clickThrough", "Allows clicking through windowed map when it's open.", 2, 2, callbacks.clickThrough)
     AddCheckbox(modulesBox, "Follow Player", "followPlayer", "Auto-centers map on player when zoomed in.", 2, 3)
-    AddCheckbox(modulesBox, "Minimap Button", "minimapButton", "Shows/hides the circular minimap button.", 2, 4, function(val)
-        if CartoMapperMinimapButton then
-            if val then CartoMapperMinimapButton:Show() else CartoMapperMinimapButton:Hide() end
-        end
-    end)
+    AddCheckbox(modulesBox, "Minimap Button", "minimapButton", "Shows/hides the circular minimap button.", 2, 4, callbacks.minimapButton)
     AddCheckbox(modulesBox, "Remember Zoom", "rememberZoom", "Remembers zoom scale and scroll offset when map is toggled.", 2, 5)
     AddCheckbox(modulesBox, "Zone & Fishing Levels", "zoneLevels", "Shows zone level range and fishing skill on continent hovers.", 2, 6)
 
@@ -406,9 +415,27 @@ local function SlashHandler(msg)
     cmd = cmd or ""
     
     if cmd == "toggle" and arg then
-        if defaults[arg] ~= nil then
-            CartoMapperDB[arg] = not CartoMapperDB[arg]
-            Print(arg .. " is now " .. (CartoMapperDB[arg] and "|cff00ff00Enabled|r" or "|cffff0000Disabled|r") .. ". Please /reload to apply changes.")
+        local targetKey = nil
+        for k in pairs(defaults) do
+            if string.lower(k) == arg then
+                targetKey = k
+                break
+            end
+        end
+        
+        if targetKey then
+            CartoMapperDB[targetKey] = not CartoMapperDB[targetKey]
+            
+            if CartoMapperConfigFrame and CartoMapperConfigFrame:IsShown() then
+                CartoMapperConfigFrame:UpdateAllValues()
+            end
+            
+            if callbacks[targetKey] then
+                callbacks[targetKey](CartoMapperDB[targetKey])
+                Print(targetKey .. " is now " .. (CartoMapperDB[targetKey] and "|cff00ff00Enabled|r" or "|cffff0000Disabled|r") .. ".")
+            else
+                Print(targetKey .. " is now " .. (CartoMapperDB[targetKey] and "|cff00ff00Enabled|r" or "|cffff0000Disabled|r") .. ". Please /reload to apply changes.")
+            end
         else
             Print("Unknown toggle option: " .. arg)
         end

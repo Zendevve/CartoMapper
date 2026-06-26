@@ -179,6 +179,7 @@ local function updatePointRelativeTo(frame, newRelativeFrame)
 end
 
 local function SetupWorldMapFrame()
+    if not WorldMapScrollFrame then return end
     WorldMapScrollFrameScrollBar:Hide()
     CartoMapper.UpdateClickThrough()
     WorldMapScrollFrame.panning = false
@@ -266,6 +267,11 @@ local function SetupWorldMapFrame()
 
     -- Update detail tiles visibility for landmass borderless mask
     UpdateDetailTilesVisibility()
+end
+
+function CartoMapper.UpdateBorderless()
+    if not WorldMapScrollFrame then return end
+    SetupWorldMapFrame()
 end
 
 -- Mouse Scroll Zoom Handler
