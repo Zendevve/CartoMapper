@@ -290,17 +290,16 @@ local function WorldMapScrollFrame_OnPan(cursorX, cursorY)
 end
 
 local function WorldMapButton_OnUpdate(self, elapsed)
-    -- Handle panning if currently dragging
+    -- Handle map panning
     if WorldMapScrollFrame.panning then
         local x, y = GetCursorPosition()
         WorldMapScrollFrame_OnPan(x, y)
     end
 
-    -- Mouse highlight positioning
+    -- Handle map highlight
     local x, y = GetCursorPosition()
-    local buttonScale = self:GetEffectiveScale()
-    x = x / buttonScale
-    y = y / buttonScale
+    x = x / self:GetEffectiveScale()
+    y = y / self:GetEffectiveScale()
 
     local centerX, centerY = self:GetCenter()
     local width = self:GetWidth()
@@ -317,7 +316,6 @@ local function WorldMapButton_OnUpdate(self, elapsed)
     if not WorldMapFrame.poiHighlight then
         WorldMapFrameAreaLabel:SetText(name)
     end
-
     if fileName then
         WorldMapHighlight:SetTexCoord(0, texPercentageX, 0, texPercentageY)
         WorldMapHighlight:SetTexture("Interface\\WorldMap\\" .. fileName .. "\\" .. fileName .. "Highlight")
@@ -328,14 +326,14 @@ local function WorldMapButton_OnUpdate(self, elapsed)
         if textureX > 0 and textureY > 0 then
             WorldMapHighlight:SetWidth(textureX)
             WorldMapHighlight:SetHeight(textureY)
-            WorldMapHighlight:SetPoint("TOPLEFT", WorldMapDetailFrame, "TOPLEFT", scrollChildX, scrollChildY)
+            WorldMapHighlight:SetPoint("TOPLEFT", "WorldMapDetailFrame", "TOPLEFT", scrollChildX, scrollChildY)
             WorldMapHighlight:Show()
         end
     else
         WorldMapHighlight:Hide()
     end
 
-    -- Position Player (accounting for zoom scale)
+    -- Position player
     UpdateWorldMapArrowFrames()
     local playerX, playerY = GetPlayerMapPosition("player")
     if playerX == 0 and playerY == 0 then
@@ -343,10 +341,9 @@ local function WorldMapButton_OnUpdate(self, elapsed)
         WorldMapPing:Hide()
         WorldMapPlayer:Hide()
     else
-        local detailScale = WorldMapDetailFrame:GetScale()
-        playerX = playerX * WorldMapDetailFrame:GetWidth() * detailScale * WORLDMAP_SETTINGS.size
-        playerY = -playerY * WorldMapDetailFrame:GetHeight() * detailScale * WORLDMAP_SETTINGS.size
-        PositionWorldMapArrowFrame("CENTER", WorldMapDetailFrame, "TOPLEFT", playerX, playerY)
+        playerX = playerX * WorldMapDetailFrame:GetWidth() * WorldMapDetailFrame:GetScale() * WORLDMAP_SETTINGS.size
+        playerY = -playerY * WorldMapDetailFrame:GetHeight() * WorldMapDetailFrame:GetScale() * WORLDMAP_SETTINGS.size
+        PositionWorldMapArrowFrame("CENTER", "WorldMapDetailFrame", "TOPLEFT", playerX, playerY)
         ShowWorldMapArrowFrame(nil)
 
         WorldMapPlayer:SetAllPoints(PlayerArrowFrame)
@@ -357,10 +354,10 @@ local function WorldMapButton_OnUpdate(self, elapsed)
         WorldMapPlayer:Show()
     end
 
-    -- Position Groupmates (Party and Raid members)
+    -- Position groupmates
     local playerCount = 0
-    local detailScale = WorldMapDetailFrame:GetScale()
-    if GetNumRaidMembers() > 0 then
+    local numRaidMembers = GetNumRaidMembers()
+    if numRaidMembers > 0 then
         for i = 1, MAX_PARTY_MEMBERS do
             local partyMemberFrame = _G["WorldMapParty" .. i]
             if partyMemberFrame then partyMemberFrame:Hide() end
@@ -373,23 +370,16 @@ local function WorldMapButton_OnUpdate(self, elapsed)
                 if (partyX == 0 and partyY == 0) or UnitIsUnit(unit, "player") then
                     partyMemberFrame:Hide()
                 else
-                    partyX = partyX * WorldMapDetailFrame:GetWidth() * detailScale
-                    partyY = -partyY * WorldMapDetailFrame:GetHeight() * detailScale
+                    partyX = partyX * WorldMapDetailFrame:GetWidth() * WorldMapDetailFrame:GetScale()
+                    partyY = -partyY * WorldMapDetailFrame:GetHeight() * WorldMapDetailFrame:GetScale()
                     partyMemberFrame:ClearAllPoints()
-                    partyMemberFrame:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", partyX, partyY)
+                    partyMemberFrame:SetPoint("CENTER", "WorldMapDetailFrame", "TOPLEFT", partyX, partyY)
                     partyMemberFrame.name = nil
                     partyMemberFrame.unit = unit
-                    
-                    WorldMapUnit_Update(partyMemberFrame)
                     partyMemberFrame:Show()
                     playerCount = playerCount + 1
                 end
             end
-        end
-        -- Hide remaining raid members
-        for i = playerCount + 1, MAX_RAID_MEMBERS do
-            local partyMemberFrame = _G["WorldMapRaid" .. i]
-            if partyMemberFrame then partyMemberFrame:Hide() end
         end
     else
         for i = 1, MAX_PARTY_MEMBERS do
@@ -399,24 +389,18 @@ local function WorldMapButton_OnUpdate(self, elapsed)
                 if partyX == 0 and partyY == 0 then
                     partyMemberFrame:Hide()
                 else
-                    partyX = partyX * WorldMapDetailFrame:GetWidth() * detailScale
-                    partyY = -partyY * WorldMapDetailFrame:GetHeight() * detailScale
+                    partyX = partyX * WorldMapButton:GetWidth() * WorldMapDetailFrame:GetScale()
+                    partyY = -partyY * WorldMapButton:GetHeight() * WorldMapDetailFrame:GetScale()
                     partyMemberFrame:ClearAllPoints()
-                    partyMemberFrame:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", partyX, partyY)
+                    partyMemberFrame:SetPoint("CENTER", "WorldMapButton", "TOPLEFT", partyX, partyY)
                     partyMemberFrame.unit = "party" .. i
-                    
-                    WorldMapUnit_Update(partyMemberFrame)
                     partyMemberFrame:Show()
                 end
             end
         end
-        for i = 1, MAX_RAID_MEMBERS do
-            local partyMemberFrame = _G["WorldMapRaid" .. i]
-            if partyMemberFrame then partyMemberFrame:Hide() end
-        end
     end
 
-    -- Position Team Members (Battlefield positions)
+    -- Position Team Members
     local numTeamMembers = GetNumBattlefieldPositions()
     for i = playerCount + 1, MAX_RAID_MEMBERS do
         local partyX, partyY, name = GetBattlefieldPosition(i - playerCount)
@@ -425,21 +409,20 @@ local function WorldMapButton_OnUpdate(self, elapsed)
             if partyX == 0 and partyY == 0 then
                 partyMemberFrame:Hide()
             else
-                partyX = partyX * WorldMapDetailFrame:GetWidth() * detailScale
-                partyY = -partyY * WorldMapDetailFrame:GetHeight() * detailScale
+                partyX = partyX * WorldMapDetailFrame:GetWidth() * WorldMapDetailFrame:GetScale()
+                partyY = -partyY * WorldMapDetailFrame:GetHeight() * WorldMapDetailFrame:GetScale()
                 partyMemberFrame:ClearAllPoints()
-                partyMemberFrame:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", partyX, partyY)
+                partyMemberFrame:SetPoint("CENTER", "WorldMapDetailFrame", "TOPLEFT", partyX, partyY)
                 partyMemberFrame.name = name
                 partyMemberFrame.unit = nil
-                if partyMemberFrame.colorIcon then
-                    partyMemberFrame.colorIcon:Hide()
-                end
-                if partyMemberFrame.icon then
-                    partyMemberFrame.icon:Show()
-                end
                 partyMemberFrame:Show()
             end
         end
+    end
+    -- Hide extra raid frames
+    for i = playerCount + numTeamMembers + 1, MAX_RAID_MEMBERS do
+        local partyMemberFrame = _G["WorldMapRaid" .. i]
+        if partyMemberFrame then partyMemberFrame:Hide() end
     end
 
     -- Position flags
@@ -452,10 +435,10 @@ local function WorldMapButton_OnUpdate(self, elapsed)
             if flagX == 0 and flagY == 0 then
                 flagFrame:Hide()
             else
-                flagX = flagX * WorldMapDetailFrame:GetWidth() * detailScale
-                flagY = -flagY * WorldMapDetailFrame:GetHeight() * detailScale
+                flagX = flagX * WorldMapDetailFrame:GetWidth() * WorldMapDetailFrame:GetScale()
+                flagY = -flagY * WorldMapDetailFrame:GetHeight() * WorldMapDetailFrame:GetScale()
                 flagFrame:ClearAllPoints()
-                flagFrame:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", flagX, flagY)
+                flagFrame:SetPoint("CENTER", "WorldMapDetailFrame", "TOPLEFT", flagX, flagY)
                 local flagTexture = _G[flagFrameName .. "Texture"]
                 if flagTexture then
                     flagTexture:SetTexture("Interface\\WorldStateFrame\\" .. flagToken)
@@ -474,10 +457,10 @@ local function WorldMapButton_OnUpdate(self, elapsed)
     if corpseX == 0 and corpseY == 0 then
         WorldMapCorpse:Hide()
     else
-        corpseX = corpseX * WorldMapDetailFrame:GetWidth() * detailScale
-        corpseY = -corpseY * WorldMapDetailFrame:GetHeight() * detailScale
+        corpseX = corpseX * WorldMapDetailFrame:GetWidth() * WorldMapDetailFrame:GetScale()
+        corpseY = -corpseY * WorldMapDetailFrame:GetHeight() * WorldMapDetailFrame:GetScale()
         WorldMapCorpse:ClearAllPoints()
-        WorldMapCorpse:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", corpseX, corpseY)
+        WorldMapCorpse:SetPoint("CENTER", "WorldMapDetailFrame", "TOPLEFT", corpseX, corpseY)
         WorldMapCorpse:Show()
     end
 
@@ -486,10 +469,10 @@ local function WorldMapButton_OnUpdate(self, elapsed)
     if (deathReleaseX == 0 and deathReleaseY == 0) or UnitIsGhost("player") then
         WorldMapDeathRelease:Hide()
     else
-        deathReleaseX = deathReleaseX * WorldMapDetailFrame:GetWidth() * detailScale
-        deathReleaseY = -deathReleaseY * WorldMapDetailFrame:GetHeight() * detailScale
+        deathReleaseX = deathReleaseX * WorldMapDetailFrame:GetWidth() * WorldMapDetailFrame:GetScale()
+        deathReleaseY = -deathReleaseY * WorldMapDetailFrame:GetHeight() * WorldMapDetailFrame:GetScale()
         WorldMapDeathRelease:ClearAllPoints()
-        WorldMapDeathRelease:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", deathReleaseX, deathReleaseY)
+        WorldMapDeathRelease:SetPoint("CENTER", "WorldMapDetailFrame", "TOPLEFT", deathReleaseX, deathReleaseY)
         WorldMapDeathRelease:Show()
     end
 
@@ -501,37 +484,36 @@ local function WorldMapButton_OnUpdate(self, elapsed)
         numVehicles = GetNumBattlefieldVehicles()
     end
     local totalVehicles = MAP_VEHICLES and #MAP_VEHICLES or 0
-    local index = 0
     for i = 1, numVehicles do
         if MAP_VEHICLES then
             if i > totalVehicles then
                 local vehicleName = "WorldMapVehicles" .. i
                 MAP_VEHICLES[i] = CreateFrame("FRAME", vehicleName, WorldMapButton, "WorldMapVehicleTemplate")
                 MAP_VEHICLES[i].texture = _G[vehicleName .. "Texture"]
-                totalVehicles = i
             end
             local vehicleX, vehicleY, unitName, isPossessed, vehicleType, orientation, isPlayer, isAlive = GetBattlefieldVehicleInfo(i)
-            if vehicleX and isAlive and not isPlayer and VEHICLE_TEXTURES[vehicleType] then
+            if vehicleX and isAlive and not isPlayer and VEHICLE_TEXTURES and VEHICLE_TEXTURES[vehicleType] then
                 local mapVehicleFrame = MAP_VEHICLES[i]
-                vehicleX = vehicleX * WorldMapDetailFrame:GetWidth() * detailScale
-                vehicleY = -vehicleY * WorldMapDetailFrame:GetHeight() * detailScale
-                mapVehicleFrame.texture:SetRotation(orientation)
-                mapVehicleFrame.texture:SetTexture(WorldMap_GetVehicleTexture(vehicleType, isPossessed))
+                vehicleX = vehicleX * WorldMapDetailFrame:GetWidth() * WorldMapDetailFrame:GetScale()
+                vehicleY = -vehicleY * WorldMapDetailFrame:GetHeight() * WorldMapDetailFrame:GetScale()
+                if mapVehicleFrame.texture then
+                    mapVehicleFrame.texture:SetRotation(orientation)
+                    mapVehicleFrame.texture:SetTexture(WorldMap_GetVehicleTexture(vehicleType, isPossessed))
+                end
                 mapVehicleFrame:ClearAllPoints()
-                mapVehicleFrame:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", vehicleX, vehicleY)
+                mapVehicleFrame:SetPoint("CENTER", "WorldMapDetailFrame", "TOPLEFT", vehicleX, vehicleY)
                 mapVehicleFrame:SetWidth(VEHICLE_TEXTURES[vehicleType].width)
                 mapVehicleFrame:SetHeight(VEHICLE_TEXTURES[vehicleType].height)
                 mapVehicleFrame.name = unitName
                 mapVehicleFrame:Show()
-                index = i
             else
-                MAP_VEHICLES[i]:Hide()
+                if MAP_VEHICLES[i] then MAP_VEHICLES[i]:Hide() end
             end
         end
     end
-    if MAP_VEHICLES and index < totalVehicles then
-        for i = index + 1, totalVehicles do
-            MAP_VEHICLES[i]:Hide()
+    if MAP_VEHICLES then
+        for i = numVehicles + 1, #MAP_VEHICLES do
+            if MAP_VEHICLES[i] then MAP_VEHICLES[i]:Hide() end
         end
     end
 end
@@ -565,15 +547,12 @@ function Zoom.Enable()
         WorldMapPing:SetModelScale(0)
     end
 
-    -- Create player 2D arrow icon texture and disable 3D player arrow model
-    if WorldMapPlayer then
-        if not WorldMapPlayer.Icon then
-            WorldMapPlayer.Icon = WorldMapPlayer:CreateTexture(nil, "ARTWORK")
-            WorldMapPlayer.Icon:SetSize(36, 36)
-            WorldMapPlayer.Icon:SetPoint("CENTER", 0, 0)
-            WorldMapPlayer.Icon:SetTexture("Interface\\AddOns\\CartoMapper\\assets\\WorldMapArrow")
-        end
-        WorldMapPlayer:SetModelScale(0)
+    -- Add 2D player arrow that will get masked/clipped correctly on pan
+    if not WorldMapPlayer.Icon then
+        WorldMapPlayer.Icon = WorldMapPlayer:CreateTexture(nil, "ARTWORK")
+        WorldMapPlayer.Icon:SetSize(36, 36)
+        WorldMapPlayer.Icon:SetPoint("CENTER", 0, 0)
+        WorldMapPlayer.Icon:SetTexture("Interface\\AddOns\\CartoMapper\\assets\\WorldMapArrow")
     end
 
     -- Hook layout update routines
@@ -613,7 +592,7 @@ function Zoom.Enable()
         end
     end)
 
-    -- Setup custom OnUpdate for map mouse positioning and pins
+    -- Setup custom OnUpdate for map mouse positioning and pin scaling
     WorldMapButton:SetScript("OnUpdate", WorldMapButton_OnUpdate)
 
     -- Setup on show
