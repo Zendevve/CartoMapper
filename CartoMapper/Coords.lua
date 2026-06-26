@@ -59,6 +59,9 @@ local function UpdatePosition()
 end
 
 function Coords.Enable()
+    if Coords.enabled then return end
+    Coords.enabled = true
+
     local display = CreateFrame("Frame", "CartoMapper_CoordsFrame", WorldMapFrame)
     cursortext = display:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     playertext = display:CreateFontString(nil, "ARTWORK", "GameFontNormal")
@@ -71,4 +74,18 @@ function Coords.Enable()
     hooksecurefunc("WorldMapFrame_SetQuestMapView", UpdatePosition)
     hooksecurefunc("WorldMap_ToggleSizeDown", UpdatePosition)
     hooksecurefunc("WorldMap_ToggleSizeUp", UpdatePosition)
+end
+
+function CartoMapper.UpdateCoordsVisibility()
+    if CartoMapperDB.coords then
+        if not Coords.enabled then
+            Coords.Enable()
+        else
+            local frame = _G["CartoMapper_CoordsFrame"]
+            if frame then frame:Show() end
+        end
+    else
+        local frame = _G["CartoMapper_CoordsFrame"]
+        if frame then frame:Hide() end
+    end
 end

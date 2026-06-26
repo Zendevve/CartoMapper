@@ -11,6 +11,7 @@ local normalTexture = assetPath .. "Normal"
 local groupTexturePattern = assetPath .. "Group%d"
 
 local function UpdateUnitIcon(tex, unit)
+    if not CartoMapperDB.groupIcons then return end
     if not tex or not unit then return end
 
     -- Get class and subgroup info
@@ -99,6 +100,9 @@ local function FixBattlefieldUnits(state)
 end
 
 function GroupIcons.Enable()
+    if GroupIcons.enabled then return end
+    GroupIcons.enabled = true
+
     -- Support custom class color addons
     if CUSTOM_CLASS_COLORS then
         RAID_CLASS_COLORS = CUSTOM_CLASS_COLORS
@@ -119,5 +123,19 @@ function GroupIcons.Enable()
         end)
     else
         FixBattlefieldUnits(true)
+    end
+end
+
+function CartoMapper.UpdateGroupIcons()
+    if CartoMapperDB.groupIcons then
+        if not GroupIcons.enabled then
+            GroupIcons.Enable()
+        else
+            FixWorldMapUnits(true)
+            FixBattlefieldUnits(true)
+        end
+    else
+        FixWorldMapUnits(false)
+        FixBattlefieldUnits(false)
     end
 end

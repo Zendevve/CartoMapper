@@ -580,6 +580,7 @@ end
 
 local function DrawPins()
     ClearPins()
+    if not CartoMapperDB.pois then return end
     
     local mapFileName = GetMapInfo()
     if not mapFileName or not POIData[mapFileName] then return end
@@ -642,6 +643,21 @@ local function UpdatePinScaling()
 end
 
 function POIs.Enable()
+    if POIs.enabled then return end
+    POIs.enabled = true
     hooksecurefunc("WorldMapFrame_Update", DrawPins)
     hooksecurefunc("WorldMapFrame_SetPOIMaxBounds", UpdatePinScaling)
+end
+
+function CartoMapper.UpdatePOIs()
+    if CartoMapperDB.pois then
+        if not POIs.enabled then
+            POIs.Enable()
+        end
+        if WorldMapFrame and WorldMapFrame:IsShown() then
+            WorldMapFrame_Update()
+        end
+    else
+        ClearPins()
+    end
 end

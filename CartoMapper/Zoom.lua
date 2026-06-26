@@ -88,12 +88,6 @@ local function SetDetailFrameScale(scale)
     WorldMapDetailFrame:SetScale(scale)
     SetPOIMaxBounds()
 
-    if WorldMapScrollFrame then
-        WorldMapScrollFrame.zoomedIn = (scale > MIN_ZOOM)
-        WorldMapScrollFrame.maxX = ((WorldMapDetailFrame:GetWidth() * scale) - WorldMapScrollFrame:GetWidth()) / scale
-        WorldMapScrollFrame.maxY = ((WorldMapDetailFrame:GetHeight() * scale) - WorldMapScrollFrame:GetHeight()) / scale
-    end
-
     -- Correct scaling on map sub-elements so they do not bloat when zoomed in
     local invScale = 1 / scale
     WorldMapPOIFrame:SetScale(1 / WORLDMAP_SETTINGS.size)
@@ -282,6 +276,7 @@ end
 
 -- Mouse Scroll Zoom Handler
 local function WorldMapScrollFrame_OnMouseWheel(self, delta)
+    if not CartoMapperDB.zoom then return end
     -- Ctrl + Scroll scales the windowed world map frame itself
     if IsControlKeyDown() and WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
         local oldScale = WorldMapFrame:GetScale()
@@ -312,6 +307,10 @@ local function WorldMapScrollFrame_OnMouseWheel(self, delta)
 
     SetDetailFrameScale(newScale)
 
+    WorldMapScrollFrame.maxX = ((WorldMapDetailFrame:GetWidth() * newScale) - WorldMapScrollFrame:GetWidth()) / newScale
+    WorldMapScrollFrame.maxY = ((WorldMapDetailFrame:GetHeight() * newScale) - WorldMapScrollFrame:GetHeight()) / newScale
+    WorldMapScrollFrame.zoomedIn = WorldMapDetailFrame:GetScale() > MIN_ZOOM
+
     local centerX = oldScrollH + frameX / oldScale
     local centerY = oldScrollV + frameY / oldScale
     local newScrollH = centerX - frameX / newScale
@@ -329,6 +328,7 @@ end
 
 -- Click and Drag Panning
 local function WorldMapButton_OnMouseDown(self, button)
+    if not CartoMapperDB.zoom then return end
     if button == "LeftButton" and WorldMapScrollFrame.zoomedIn then
         WorldMapScrollFrame.panning = true
         local x, y = GetCursorPosition()
@@ -341,6 +341,10 @@ local function WorldMapButton_OnMouseDown(self, button)
 end
 
 local function WorldMapButton_OnMouseUp(self, button)
+    if not CartoMapperDB.zoom then
+        WorldMapButton_OnClick(WorldMapButton, button)
+        return
+    end
     WorldMapScrollFrame.panning = false
     if not WorldMapScrollFrame.moved then
         -- Default zoom click (subzone/continent click)
@@ -631,6 +635,9 @@ local function WorldMapButton_OnUpdate(self, elapsed)
 end
 
 function Zoom.Enable()
+    if Zoom.enabled then return end
+    Zoom.enabled = true
+
     -- Create the scroll frame dynamically if it doesn't exist yet
     if not WorldMapScrollFrame then
         WorldMapScrollFrame = CreateFrame("ScrollFrame", "WorldMapScrollFrame", WorldMapFrame, "FauxScrollFrameTemplate")
@@ -716,4 +723,19 @@ function Zoom.Enable()
         end
         SetupWorldMapFrame()
     end)
+end
+
+function CartoMapper.UpdateZoom()
+    if not WorldMapScrollFrame then return end
+    if not CartoMapperDB.zoom then
+        -- Reset zoom state to default
+        SetDetailFrameScale(1.0)
+        WorldMapScrollFrame:SetHorizontalScroll(0)
+        WorldMapScrollFrame:SetVerticalScroll(0)
+        WorldMapScrollFrame.zoomedIn = false
+        AfterScrollOrPan()
+    end
+    if WorldMapFrame and WorldMapFrame:IsShown() then
+        SetupWorldMapFrame()
+    end
 end

@@ -36,6 +36,24 @@ local defaults = {
 }
 
 local callbacks = {
+    zoom = function(val)
+        if CartoMapper.UpdateZoom then CartoMapper.UpdateZoom() end
+    end,
+    coords = function(val)
+        if CartoMapper.UpdateCoordsVisibility then CartoMapper.UpdateCoordsVisibility() end
+    end,
+    battleMap = function(val)
+        if CartoMapper.UpdateBattleMap then CartoMapper.UpdateBattleMap() end
+    end,
+    groupIcons = function(val)
+        if CartoMapper.UpdateGroupIcons then CartoMapper.UpdateGroupIcons() end
+    end,
+    fogClear = function(val)
+        if CartoMapper.UpdateFogClearSettings then CartoMapper.UpdateFogClearSettings() end
+    end,
+    pois = function(val)
+        if CartoMapper.UpdatePOIs then CartoMapper.UpdatePOIs() end
+    end,
     borderless = function(val)
         if CartoMapper.UpdateBorderless then CartoMapper.UpdateBorderless() end
     end,
@@ -47,8 +65,10 @@ local callbacks = {
             if val then CartoMapperMinimapButton:Show() else CartoMapperMinimapButton:Hide() end
         end
     end,
-    fogClear = function(val)
-        if CartoMapper.UpdateFogClearSettings then CartoMapper.UpdateFogClearSettings() end
+    zoneLevels = function(val)
+        if WorldMapFrame and WorldMapFrame:IsShown() then
+            WorldMapFrame_Update()
+        end
     end,
 }
 
@@ -79,7 +99,7 @@ function CartoMapper:OnEvent(event, arg1)
 
         -- Initialize all loaded modules
         for name, module in pairs(CartoMapper.modules) do
-            if CartoMapperDB[name] then
+            if CartoMapperDB[name] or name == "zoom" then
                 if module.Enable then
                     module.Enable()
                 end
@@ -205,19 +225,19 @@ function CreateConfigFrame()
     end
 
     -- Add checkboxes to modulesBox
-    AddCheckbox(modulesBox, "Zoom & Pan *", "zoom", "Enables scroll-to-zoom and drag-to-pan on World Map.", 1, 1)
-    AddCheckbox(modulesBox, "Coordinates", "coords", "Displays cursor and player coordinates on map bottom.", 1, 2)
-    AddCheckbox(modulesBox, "Battlefield Minimap *", "battleMap", "Enhances Battlefield Minimap (Shift+M) to look clean.", 1, 3)
-    AddCheckbox(modulesBox, "Group & Raid Icons *", "groupIcons", "Enables class-colored group and raid icons on map.", 1, 4)
-    AddCheckbox(modulesBox, "Clear Fog of War *", "fogClear", "Reveals unexplored map overlays with custom opacity/tints.", 1, 5, callbacks.fogClear)
-    AddCheckbox(modulesBox, "Points of Interest *", "pois", "Shows dungeons and flight paths on World Map.", 1, 6)
+    AddCheckbox(modulesBox, "Zoom & Pan", "zoom", "Enables scroll-to-zoom and drag-to-pan on World Map.", 1, 1, callbacks.zoom)
+    AddCheckbox(modulesBox, "Coordinates", "coords", "Displays cursor and player coordinates on map bottom.", 1, 2, callbacks.coords)
+    AddCheckbox(modulesBox, "Battlefield Minimap", "battleMap", "Enhances Battlefield Minimap (Shift+M) to look clean.", 1, 3, callbacks.battleMap)
+    AddCheckbox(modulesBox, "Group & Raid Icons", "groupIcons", "Enables class-colored group and raid icons on map.", 1, 4, callbacks.groupIcons)
+    AddCheckbox(modulesBox, "Clear Fog of War", "fogClear", "Reveals unexplored map overlays with custom opacity/tints.", 1, 5, callbacks.fogClear)
+    AddCheckbox(modulesBox, "Points of Interest", "pois", "Shows dungeons and flight paths on World Map.", 1, 6, callbacks.pois)
 
     AddCheckbox(modulesBox, "Borderless Mode", "borderless", "Hides windowed map borders and art frames.", 2, 1, callbacks.borderless)
     AddCheckbox(modulesBox, "Click-Through Map", "clickThrough", "Allows clicking through windowed map when it's open.", 2, 2, callbacks.clickThrough)
     AddCheckbox(modulesBox, "Follow Player", "followPlayer", "Auto-centers map on player when zoomed in.", 2, 3)
     AddCheckbox(modulesBox, "Minimap Button", "minimapButton", "Shows/hides the circular minimap button.", 2, 4, callbacks.minimapButton)
     AddCheckbox(modulesBox, "Remember Zoom", "rememberZoom", "Remembers zoom scale and scroll offset when map is toggled.", 2, 5)
-    AddCheckbox(modulesBox, "Zone & Fishing Levels", "zoneLevels", "Shows zone level range and fishing skill on continent hovers.", 2, 6)
+    AddCheckbox(modulesBox, "Zone & Fishing Levels", "zoneLevels", "Shows zone level range and fishing skill on continent hovers.", 2, 6, callbacks.zoneLevels)
 
     -- Add sliders container
     local sliders = {}
