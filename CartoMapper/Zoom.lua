@@ -121,55 +121,6 @@ local function updatePointRelativeTo(frame, newRelativeFrame)
     end
 end
 
-function Zoom.UpdateBorderVisibility()
-    local hide = CartoMapperDB.hideBorder
-    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
-        if hide then
-            if WorldMapFrameMiniBorderLeft then WorldMapFrameMiniBorderLeft:Hide() end
-            if WorldMapFrameMiniBorderRight then WorldMapFrameMiniBorderRight:Hide() end
-            if WorldMapFrameTitle then WorldMapFrameTitle:Hide() end
-            
-            WorldMapFrameCloseButton:ClearAllPoints()
-            WorldMapFrameCloseButton:SetPoint("TOPRIGHT", WorldMapScrollFrame, "TOPRIGHT", -2, -2)
-            WorldMapFrameSizeDownButton:ClearAllPoints()
-            WorldMapFrameSizeDownButton:SetPoint("TOPRIGHT", WorldMapFrameCloseButton, "TOPLEFT", 2, 0)
-        else
-            if WorldMapFrameMiniBorderLeft then WorldMapFrameMiniBorderLeft:Show() end
-            if WorldMapFrameMiniBorderRight then WorldMapFrameMiniBorderRight:Show() end
-            if WorldMapFrameTitle then WorldMapFrameTitle:Show() end
-            
-            WorldMapFrameCloseButton:ClearAllPoints()
-            WorldMapFrameCloseButton:SetPoint("TOPRIGHT", WorldMapFrameMiniBorderRight, "TOPRIGHT", -44, 5)
-            WorldMapFrameSizeDownButton:ClearAllPoints()
-            WorldMapFrameSizeDownButton:SetPoint("TOPRIGHT", WorldMapFrameCloseButton, "TOPLEFT", 2, 0)
-        end
-    else
-        for i = 1, 12 do
-            local tex = _G["WorldMapFrameTexture" .. i]
-            if tex then
-                if hide then tex:Hide() else tex:Show() end
-            end
-        end
-        if hide then
-            if WorldMapFrameTitle then WorldMapFrameTitle:Hide() end
-            WorldMapFrameCloseButton:ClearAllPoints()
-            WorldMapFrameCloseButton:SetPoint("TOPRIGHT", WorldMapScrollFrame, "TOPRIGHT", -2, -2)
-            if WorldMapFrameSizeUpButton then
-                WorldMapFrameSizeUpButton:ClearAllPoints()
-                WorldMapFrameSizeUpButton:SetPoint("TOPRIGHT", WorldMapFrameCloseButton, "TOPLEFT", 2, 0)
-            end
-        else
-            if WorldMapFrameTitle then WorldMapFrameTitle:Show() end
-            WorldMapFrameCloseButton:ClearAllPoints()
-            WorldMapFrameCloseButton:SetPoint("TOPRIGHT", WorldMapFrame, "TOPRIGHT", -4, -4)
-            if WorldMapFrameSizeUpButton then
-                WorldMapFrameSizeUpButton:ClearAllPoints()
-                WorldMapFrameSizeUpButton:SetPoint("TOPRIGHT", WorldMapFrameCloseButton, "TOPLEFT", 2, 0)
-            end
-        end
-    end
-end
-
 local function SetupWorldMapFrame()
     WorldMapScrollFrameScrollBar:Hide()
     WorldMapFrame:EnableMouse(true)
@@ -238,18 +189,23 @@ local function SetupWorldMapFrame()
     updatePointRelativeTo(WorldMapQuestScrollFrame, WorldMapScrollFrame)
     updatePointRelativeTo(WorldMapQuestDetailScrollFrame, WorldMapScrollFrame)
 
-    -- Apply border visibility
-    Zoom.UpdateBorderVisibility()
-
-    -- Setup resize handle
-    if CartoMapper_ResizeButton then
-        if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
-            CartoMapper_ResizeButton:ClearAllPoints()
-            CartoMapper_ResizeButton:SetPoint("BOTTOMRIGHT", WorldMapScrollFrame, "BOTTOMRIGHT", -2, 2)
-            CartoMapper_ResizeButton:Show()
-        else
-            CartoMapper_ResizeButton:Hide()
-        end
+    -- Handle borderless windowed map elements initial visibility
+    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapperDB.borderless then
+        WorldMapFrameMiniBorderLeft:Hide()
+        WorldMapFrameMiniBorderRight:Hide()
+        WorldMapFrameTitle:Hide()
+        WorldMapTitleButton:Hide()
+        WorldMapFrameCloseButton:Hide()
+        WorldMapFrameSizeUpButton:Hide()
+        WorldMapFrameSizeDownButton:Hide()
+    elseif WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
+        WorldMapFrameMiniBorderLeft:Show()
+        WorldMapFrameMiniBorderRight:Show()
+        WorldMapFrameTitle:Show()
+        WorldMapTitleButton:Show()
+        WorldMapFrameCloseButton:Show()
+        WorldMapFrameSizeUpButton:Show()
+        WorldMapFrameSizeDownButton:Hide()
     end
 end
 
@@ -304,38 +260,22 @@ local function WorldMapScrollFrame_OnMouseWheel(self, delta)
     AfterScrollOrPan()
 end
 
--- Click and Drag Panning or Map Window Dragging
+-- Click and Drag Panning
 local function WorldMapButton_OnMouseDown(self, button)
-    if button == "LeftButton" then
-        if WorldMapScrollFrame.zoomedIn then
-            WorldMapScrollFrame.panning = true
-            local x, y = GetCursorPosition()
-            WorldMapScrollFrame.cursorX = x
-            WorldMapScrollFrame.cursorY = y
-            WorldMapScrollFrame.x = WorldMapScrollFrame:GetHorizontalScroll()
-            WorldMapScrollFrame.y = WorldMapScrollFrame:GetVerticalScroll()
-            WorldMapScrollFrame.moved = false
-        elseif WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
-            -- Drag the entire map window if not zoomed in
-            WorldMapScrollFrame.draggingMap = true
-            WorldMapFrame:StartMoving()
-        end
+    if button == "LeftButton" and WorldMapScrollFrame.zoomedIn then
+        WorldMapScrollFrame.panning = true
+        local x, y = GetCursorPosition()
+        WorldMapScrollFrame.cursorX = x
+        WorldMapScrollFrame.cursorY = y
+        WorldMapScrollFrame.x = WorldMapScrollFrame:GetHorizontalScroll()
+        WorldMapScrollFrame.y = WorldMapScrollFrame:GetVerticalScroll()
+        WorldMapScrollFrame.moved = false
     end
 end
 
 local function WorldMapButton_OnMouseUp(self, button)
-    if WorldMapScrollFrame.panning then
-        WorldMapScrollFrame.panning = false
-    elseif WorldMapScrollFrame.draggingMap then
-        WorldMapScrollFrame.draggingMap = false
-        WorldMapFrame:StopMovingOrSizing()
-        if WorldMapScreenAnchor then
-            WorldMapScreenAnchor:ClearAllPoints()
-            WorldMapScreenAnchor:SetPoint("TOPLEFT", WorldMapFrame)
-        end
-    end
-
-    if not WorldMapScrollFrame.moved and not WorldMapScrollFrame.draggingMap then
+    WorldMapScrollFrame.panning = false
+    if not WorldMapScrollFrame.moved then
         -- Default zoom click (subzone/continent click)
         WorldMapButton_OnClick(WorldMapButton, button)
         -- Reset scale when changing zones
@@ -346,7 +286,6 @@ local function WorldMapButton_OnMouseUp(self, button)
         WorldMapScrollFrame.zoomedIn = false
     end
     WorldMapScrollFrame.moved = false
-    WorldMapScrollFrame.draggingMap = false
 end
 
 local function WorldMapScrollFrame_OnPan(cursorX, cursorY)
@@ -370,6 +309,28 @@ local function WorldMapScrollFrame_OnPan(cursorX, cursorY)
 end
 
 local function WorldMapButton_OnUpdate(self, elapsed)
+    -- Handle borderless windowed map elements visibility on mouse hover
+    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
+        if CartoMapperDB.borderless then
+            if WorldMapFrame:IsMouseOver() then
+                WorldMapFrameMiniBorderLeft:Show()
+                WorldMapFrameMiniBorderRight:Show()
+                WorldMapFrameTitle:Show()
+                WorldMapTitleButton:Show()
+                WorldMapFrameCloseButton:Show()
+                WorldMapFrameSizeUpButton:Show()
+            else
+                WorldMapFrameMiniBorderLeft:Hide()
+                WorldMapFrameMiniBorderRight:Hide()
+                WorldMapFrameTitle:Hide()
+                WorldMapTitleButton:Hide()
+                WorldMapFrameCloseButton:Hide()
+                WorldMapFrameSizeUpButton:Hide()
+                WorldMapFrameSizeDownButton:Hide()
+            end
+        end
+    end
+
     -- Handle map panning
     if WorldMapScrollFrame.panning then
         local x, y = GetCursorPosition()
@@ -633,70 +594,6 @@ function Zoom.Enable()
         WorldMapPlayer.Icon:SetSize(36, 36)
         WorldMapPlayer.Icon:SetPoint("CENTER", 0, 0)
         WorldMapPlayer.Icon:SetTexture("Interface\\AddOns\\CartoMapper\\assets\\WorldMapArrow")
-    end
-
-    -- Create the map resize button handle
-    if not CartoMapper_ResizeButton then
-        local resizeButton = CreateFrame("Button", "CartoMapper_ResizeButton", WorldMapFrame)
-        resizeButton:SetSize(16, 16)
-        resizeButton:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-        resizeButton:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-        resizeButton:SetFrameLevel(WorldMapDetailFrame:GetFrameLevel() + 5)
-        
-        local SOS = {}
-        resizeButton:SetScript("OnMouseDown", function(self, button)
-            if button == "LeftButton" then
-                local left = WorldMapFrame:GetLeft()
-                local top = WorldMapFrame:GetTop()
-                local parentHeight = UIParent:GetHeight()
-                
-                -- Re-anchor to TOPLEFT so it scales from the top-left corner
-                WorldMapFrame:ClearAllPoints()
-                WorldMapFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", left, top - parentHeight)
-                
-                SOS.left = left
-                SOS.top = top
-                SOS.scale = WorldMapFrame:GetScale()
-                
-                -- Get initial cursor position in screen space
-                local cursorX, cursorY = GetCursorPosition()
-                local uiScale = UIParent:GetScale()
-                cursorX = cursorX / uiScale
-                cursorY = cursorY / uiScale
-                
-                -- Calculate initial distance from top-left corner of the map to cursor
-                local dx = cursorX - left
-                local dy = top - cursorY
-                SOS.dist = math.sqrt(dx * dx + dy * dy)
-                
-                self:SetScript("OnUpdate", function(self)
-                    local curX, curY = GetCursorPosition()
-                    curX = curX / uiScale
-                    curY = curY / uiScale
-                    
-                    local dx = curX - SOS.left
-                    local dy = SOS.top - curY
-                    local currentDist = math.sqrt(dx * dx + dy * dy)
-                    
-                    if SOS.dist > 0 then
-                        local newScale = (currentDist / SOS.dist) * SOS.scale
-                        newScale = math.max(0.4, math.min(1.8, newScale)) -- Clamp scale
-                        WorldMapFrame:SetScale(newScale)
-                        CartoMapperDB.mapScale = newScale
-                    end
-                end)
-            end
-        end)
-
-        resizeButton:SetScript("OnMouseUp", function(self, button)
-            self:SetScript("OnUpdate", nil)
-            
-            -- Save position via screen anchor if applicable
-            if WorldMapScreenAnchor then
-                WorldMapScreenAnchor:ClearAllPoints()
-                WorldMapScreenAnchor:SetPoint("TOPLEFT", WorldMapFrame)
-            end
-        end)
     end
 
     -- Hook layout update routines

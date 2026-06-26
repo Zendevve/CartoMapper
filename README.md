@@ -26,6 +26,7 @@ This isn't a copy-paste compilation. It required custom script compilers to port
 *   👥 **Class-Colored Group Icons**: Party and raid members are shown with class colors and subgroup numbers (1–8), complete with pulsing indicators for dead (grey), in-combat (red), and AFK (purple) states.
 *   📐 **Cursor & Player Coordinates**: Lightweight, precise coordinates rendered at the bottom of the map.
 *   🖥️ **Ctrl + Scroll Window Scaling**: Easily scale the windowed map frame size up or down on the fly.
+*   🖼️ **Borderless Windowed Map**: Strip default black borders and buttons from the windowed map for a sleek, transparent overlay. Controls reappear on mouse hover.
 *   ⚔️ **Borderless Battlefield Minimap (Shift+M)**: Hides bulky default borders and base tiles for a sleek, transparent overlay.
 
 ---
@@ -58,7 +59,7 @@ Use `/cm` or `/cartomapper` in-game to manage settings:
 
 *   `/cm status` — Displays the current status of all modular features.
 *   `/cm toggle <option>` — Toggles a specific module.
-    *   *Options*: `zoom`, `coords`, `battlemap`, `groupicons`, `fogclear`, `pois`
+    *   *Options*: `zoom`, `coords`, `battlemap`, `groupicons`, `fogclear`, `pois`, `borderless`
 *   `/reload` — Reloads the UI to apply toggled module changes.
 
 ---
