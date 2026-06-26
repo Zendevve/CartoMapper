@@ -184,6 +184,7 @@ local function SetupWorldMapFrame()
     CartoMapper.UpdateClickThrough()
     WorldMapScrollFrame.panning = false
     WorldMapScrollFrame.moved = false
+    WorldMapScrollFrame.manuallyPanned = false
 
     -- Adapt coordinates of quest tracker and frame positions based on WotLK sizes
     WorldMapScrollFrame:ClearAllPoints()
@@ -277,6 +278,7 @@ end
 -- Mouse Scroll Zoom Handler
 local function WorldMapScrollFrame_OnMouseWheel(self, delta)
     if not CartoMapperDB.zoom then return end
+    WorldMapScrollFrame.manuallyPanned = false
     -- Ctrl + Scroll scales the windowed world map frame itself
     if IsControlKeyDown() and WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
         local oldScale = WorldMapFrame:GetScale()
@@ -355,6 +357,8 @@ local function WorldMapButton_OnMouseUp(self, button)
         WorldMapScrollFrame:SetVerticalScroll(0)
         AfterScrollOrPan()
         WorldMapScrollFrame.zoomedIn = false
+    else
+        WorldMapScrollFrame.manuallyPanned = true
     end
     WorldMapScrollFrame.moved = false
 end
@@ -406,6 +410,23 @@ local function WorldMapButton_OnUpdate(self, elapsed)
     if WorldMapScrollFrame.panning then
         local x, y = GetCursorPosition()
         WorldMapScrollFrame_OnPan(x, y)
+    end
+
+    -- Auto-center on player if followPlayer is enabled, map is zoomed in, and we haven't manually panned
+    if CartoMapperDB.followPlayer and WorldMapScrollFrame.zoomedIn and not WorldMapScrollFrame.manuallyPanned and not WorldMapScrollFrame.panning then
+        local playerX, playerY = GetPlayerMapPosition("player")
+        if playerX > 0 and playerY > 0 then
+            local scale = WorldMapDetailFrame:GetScale()
+            local scrollH = playerX * WorldMapDetailFrame:GetWidth() - (WorldMapScrollFrame:GetWidth() / 2) / scale
+            local scrollV = playerY * WorldMapDetailFrame:GetHeight() - (WorldMapScrollFrame:GetHeight() / 2) / scale
+
+            scrollH = math.max(0, math.min(scrollH, WorldMapScrollFrame.maxX or 0))
+            scrollV = math.max(0, math.min(scrollV, WorldMapScrollFrame.maxY or 0))
+
+            WorldMapScrollFrame:SetHorizontalScroll(scrollH)
+            WorldMapScrollFrame:SetVerticalScroll(scrollV)
+            AfterScrollOrPan()
+        end
     end
 
     -- Handle map highlight
