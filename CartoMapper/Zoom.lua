@@ -6,6 +6,12 @@ Also handles Ctrl + Scroll windowed map scaling and inverse scale correction for
 
 local Zoom = {}
 CartoMapper.modules["zoom"] = Zoom
+local DB = CartoMapper.DB
+
+Zoom.defaults = {
+    mapX = 10,
+    mapY = -118,
+}
 
 function CartoMapper.UpdateClickThrough()
     local state = not (WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapper.DB.GetOpt("clickThrough"))
@@ -205,8 +211,11 @@ local function SetupWorldMapFrame()
             WorldMapTrackQuest:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 16, -9)
         end
 
-        WorldMapFrame:SetPoint("TOPLEFT", WorldMapScreenAnchor or UIParent, 0, 0)
-        WorldMapFrame:SetScale(CartoMapper.DB.GetOpt("mapScale") or 1.0)
+        local x = DB.GetOpt("mapX") or 10
+        local y = DB.GetOpt("mapY") or -118
+        WorldMapFrame:ClearAllPoints()
+        WorldMapFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", x, y)
+        WorldMapFrame:SetScale(DB.GetOpt("mapScale") or 1.0)
         WorldMapFrame:SetMovable("true")
         WorldMapTitleButton:Show()
         WorldMapTitleButton:ClearAllPoints()
@@ -730,18 +739,14 @@ function Zoom.Enable()
 
     -- Windowed map drag-to-move bindings
     WorldMapTitleButton:SetScript("OnDragStart", function()
-        if WorldMapScreenAnchor then
-            WorldMapScreenAnchor:ClearAllPoints()
-        end
-        WorldMapFrame:ClearAllPoints()
         WorldMapFrame:StartMoving()
     end)
     WorldMapTitleButton:SetScript("OnDragStop", function()
         WorldMapFrame:StopMovingOrSizing()
-        if WorldMapScreenAnchor then
-            WorldMapScreenAnchor:StartMoving()
-            WorldMapScreenAnchor:SetPoint("TOPLEFT", WorldMapFrame)
-            WorldMapScreenAnchor:StopMovingOrSizing()
+        local point, relativeTo, relativePoint, xOfs, yOfs = WorldMapFrame:GetPoint()
+        if xOfs and yOfs then
+            DB.SetOpt("mapX", xOfs)
+            DB.SetOpt("mapY", yOfs)
         end
     end)
 
