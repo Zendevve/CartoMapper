@@ -45,6 +45,22 @@ CartoMapper.Print = Print
 -- Forward declarations
 local CreateMinimapButton, UpdateMinimapButtonPosition
 
+StaticPopupDialogs["CARTOMAPPER_DONATE"] = {
+    text = "Like CartoMapper? Press Ctrl+C to copy the donation link and support development!",
+    button1 = "Close",
+    hasEditBox = true,
+    editBoxWidth = 260,
+    OnShow = function(self)
+        local editBox = _G[self:GetName().."EditBox"]
+        editBox:SetText("https://www.buymeacoffee.com/zendevve")
+        editBox:SetFocus()
+        editBox:HighlightText()
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+}
+
 function CartoMapper:OnEvent(event, arg1)
     if event == "ADDON_LOADED" and arg1 == "CartoMapper" then
         -- Register defaults for core
@@ -123,6 +139,8 @@ function CreateMinimapButton()
     minimapBtn:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 
     minimapBtn:RegisterForDrag("LeftButton")
+    minimapBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    
     minimapBtn:SetScript("OnDragStart", function(self)
         self:LockHighlight()
         self:SetScript("OnUpdate", function()
@@ -141,13 +159,17 @@ function CreateMinimapButton()
         self:UnlockHighlight()
     end)
 
-    minimapBtn:SetScript("OnClick", function()
-        if CartoMapperConfigFrame then
-            if CartoMapperConfigFrame:IsShown() then
-                CartoMapperConfigFrame:Hide()
-            else
-                CartoMapperConfigFrame:Show()
-                CartoMapperConfigFrame:UpdateAllValues()
+    minimapBtn:SetScript("OnClick", function(self, button)
+        if button == "RightButton" then
+            StaticPopup_Show("CARTOMAPPER_DONATE")
+        else
+            if CartoMapperConfigFrame then
+                if CartoMapperConfigFrame:IsShown() then
+                    CartoMapperConfigFrame:Hide()
+                else
+                    CartoMapperConfigFrame:Show()
+                    CartoMapperConfigFrame:UpdateAllValues()
+                end
             end
         end
     end)
@@ -156,6 +178,7 @@ function CreateMinimapButton()
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:SetText("CartoMapper", 0, 1, 0.8)
         GameTooltip:AddLine("Left-Click to open options panel.", 1, 1, 1)
+        GameTooltip:AddLine("Right-Click to copy support link. ☕", 1, 0.8, 0)
         GameTooltip:AddLine("Drag to move button around minimap.", 1, 1, 1)
         GameTooltip:Show()
     end)

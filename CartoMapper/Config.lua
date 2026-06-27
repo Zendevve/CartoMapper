@@ -81,7 +81,19 @@ function CartoMapper.CreateConfigFrame()
         end
     end)
 
-    -- Bottom controls (Reset, Reload)
+    -- Bottom controls (Support, Reset, Reload)
+    local supportBtn = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
+    supportBtn:SetSize(130, 24)
+    supportBtn:SetPoint("BOTTOMLEFT", configFrame, "BOTTOMLEFT", 10, 16)
+    supportBtn:SetText("Support Addon ☕")
+    local supportText = supportBtn:GetFontString()
+    if supportText then
+        supportText:SetTextColor(1, 0.82, 0)
+    end
+    supportBtn:SetScript("OnClick", function()
+        StaticPopup_Show("CARTOMAPPER_DONATE")
+    end)
+
     local resetBtn = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
     resetBtn:SetSize(130, 24)
     resetBtn:SetPoint("BOTTOMLEFT", configFrame, "BOTTOMLEFT", 150, 16)
