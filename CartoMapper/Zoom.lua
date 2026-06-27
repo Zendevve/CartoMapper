@@ -49,7 +49,7 @@ faderFrame:SetScript("OnUpdate", function(self, elapsed)
     end
 end)
 
-local MAX_ZOOM = 4.0
+local MAX_ZOOM = 8.0
 local ZOOM_STEP = 0.1
 local MIN_ZOOM = 1.0
 
@@ -478,14 +478,16 @@ local function WorldMapButton_OnUpdate(self, elapsed)
         WorldMapPing:Hide()
         WorldMapPlayer:Hide()
     else
-        playerX = playerX * WorldMapDetailFrame:GetWidth() * WorldMapDetailFrame:GetScale() * WORLDMAP_SETTINGS.size
-        playerY = -playerY * WorldMapDetailFrame:GetHeight() * WorldMapDetailFrame:GetScale() * WORLDMAP_SETTINGS.size
-        PositionWorldMapArrowFrame("CENTER", "WorldMapDetailFrame", "TOPLEFT", playerX, playerY)
+        local arrowX = playerX * WorldMapDetailFrame:GetWidth() * WorldMapDetailFrame:GetScale() * WORLDMAP_SETTINGS.size
+        local arrowY = -playerY * WorldMapDetailFrame:GetHeight() * WorldMapDetailFrame:GetScale() * WORLDMAP_SETTINGS.size
+        PositionWorldMapArrowFrame("CENTER", "WorldMapDetailFrame", "TOPLEFT", arrowX, arrowY)
         ShowWorldMapArrowFrame(nil)
 
-        WorldMapPlayer:SetAllPoints(PlayerArrowFrame)
+        WorldMapPlayer:ClearAllPoints()
+        WorldMapPlayer:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", playerX * WorldMapDetailFrame:GetWidth(), -playerY * WorldMapDetailFrame:GetHeight())
+        WorldMapPlayer:SetSize(36, 36)
         if WorldMapPlayer.Icon then
-            WorldMapPlayer.Icon:SetRotation(PlayerArrowFrame:GetFacing())
+            WorldMapPlayer.Icon:SetRotation(PlayerArrowFrame:GetFacing() or 0)
             WorldMapPlayer.Icon:SetSize(36, 36)
         end
         WorldMapPlayer:Show()
