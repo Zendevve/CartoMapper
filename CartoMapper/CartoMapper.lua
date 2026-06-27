@@ -35,6 +35,8 @@ local coreDefaults = {
     stationaryOpacity = 1.0,
     NoFadeCursor = false,
     hideTownCityIcons = false,
+    playerArrowSize = 16,
+    groupIconSize = 16,
 }
 
 local function Print(msg)

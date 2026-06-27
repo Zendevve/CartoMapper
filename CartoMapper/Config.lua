@@ -269,6 +269,8 @@ function CartoMapper.CreateConfigFrame()
                 if CartoMapper.UpdateFogClearSettings then CartoMapper.UpdateFogClearSettings() end
             elseif key == "mapScale" then
                 if WorldMapFrame then WorldMapFrame:SetScale(value) end
+            elseif key == "playerArrowSize" or key == "groupIconSize" then
+                if CartoMapper.UpdateZoom then CartoMapper.UpdateZoom() end
             end
         end)
 
@@ -318,6 +320,8 @@ function CartoMapper.CreateConfigFrame()
     CreateCheckbox(panelZoom, "Scroll-to-Zoom", "zoom", "Enables zooming map in/out with the mouse wheel.", 15, -15, true)
     CreateCheckbox(panelZoom, "Center Map on Player", "followPlayer", "Automatically pans map to keep player arrow in view.", 15, -45, false)
     CreateSlider(panelZoom, "Maximum Zoom Scale", "maxZoom", 1.0, 10.0, 0.5, "%.1fx", "Sets the maximum zoom factor allowed on Scroll Zoom.", 15, -105, false)
+    CreateSlider(panelZoom, "Player Arrow Scale", "playerArrowSize", 12, 36, 2, "%.0f px", "Sets the size of the player arrow on the main map.", 15, -165, false)
+    CreateSlider(panelZoom, "Group Icons Scale", "groupIconSize", 12, 36, 2, "%.0f px", "Sets the size of the party/raid member icons on the main map.", 180, -165, false)
 
     -- Tab 4: Fog Clear
     local panelFog = tabPanels[4]

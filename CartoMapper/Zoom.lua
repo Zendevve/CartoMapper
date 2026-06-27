@@ -6,23 +6,6 @@ Also handles Ctrl + Scroll windowed map scaling and inverse scale correction for
 
 local Zoom = {}
 CartoMapper.modules["zoom"] = Zoom
-local DB = CartoMapper.DB
-
-Zoom.defaults = {
-    mapX = 10,
-    mapY = -118,
-}
-
-local orig_WorldMapFrame_SetPoint = WorldMapFrame.SetPoint
-function WorldMapFrame:SetPoint(point, relativeTo, relativePoint, x, y)
-    if WORLDMAP_SETTINGS and WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and (relativeTo == WorldMapScreenAnchor or relativeTo == "WorldMapScreenAnchor") then
-        local savedX = DB.GetOpt("mapX") or 10
-        local savedY = DB.GetOpt("mapY") or -118
-        orig_WorldMapFrame_SetPoint(self, "TOPLEFT", UIParent, "TOPLEFT", savedX, savedY)
-    else
-        orig_WorldMapFrame_SetPoint(self, point, relativeTo, relativePoint, x, y)
-    end
-end
 
 function CartoMapper.UpdateClickThrough()
     local state = not (WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapper.DB.GetOpt("clickThrough"))
@@ -116,21 +99,25 @@ local function SetDetailFrameScale(scale)
     WorldMapPOIFrame:SetScale(1 / WORLDMAP_SETTINGS.size)
     WorldMapBlobFrame:SetScale(scale)
 
-    local elementScale = invScale / WORLDMAP_SETTINGS.size
+    local pSize = CartoMapper.DB.GetOpt("playerArrowSize") or 16
+    local arrowScale = pSize / 16
+    local elementScale = (invScale / WORLDMAP_SETTINGS.size) * arrowScale
     WorldMapPlayer:SetScale(elementScale)
     WorldMapDeathRelease:SetScale(elementScale)
     WorldMapCorpse:SetScale(elementScale)
 
     -- Party Members
+    local gSize = CartoMapper.DB.GetOpt("groupIconSize") or 16
+    local groupScale = gSize / 16
     for i = 1, MAX_PARTY_MEMBERS do
         local f = _G["WorldMapParty" .. i]
-        if f then f:SetScale(invScale) end
+        if f then f:SetScale(invScale * groupScale) end
     end
 
     -- Raid Members
     for i = 1, MAX_RAID_MEMBERS do
         local f = _G["WorldMapRaid" .. i]
-        if f then f:SetScale(invScale) end
+        if f then f:SetScale(invScale * groupScale) end
     end
 
     -- Flags
@@ -222,11 +209,8 @@ local function SetupWorldMapFrame()
             WorldMapTrackQuest:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 16, -9)
         end
 
-        local x = DB.GetOpt("mapX") or 10
-        local y = DB.GetOpt("mapY") or -118
-        WorldMapFrame:ClearAllPoints()
-        WorldMapFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", x, y)
-        WorldMapFrame:SetScale(DB.GetOpt("mapScale") or 1.0)
+        WorldMapFrame:SetPoint("TOPLEFT", WorldMapScreenAnchor or UIParent, 0, 0)
+        WorldMapFrame:SetScale(CartoMapper.DB.GetOpt("mapScale") or 1.0)
         WorldMapFrame:SetMovable("true")
         WorldMapTitleButton:Show()
         WorldMapTitleButton:ClearAllPoints()
@@ -750,14 +734,18 @@ function Zoom.Enable()
 
     -- Windowed map drag-to-move bindings
     WorldMapTitleButton:SetScript("OnDragStart", function()
+        if WorldMapScreenAnchor then
+            WorldMapScreenAnchor:ClearAllPoints()
+        end
+        WorldMapFrame:ClearAllPoints()
         WorldMapFrame:StartMoving()
     end)
     WorldMapTitleButton:SetScript("OnDragStop", function()
         WorldMapFrame:StopMovingOrSizing()
-        local point, relativeTo, relativePoint, xOfs, yOfs = WorldMapFrame:GetPoint()
-        if xOfs and yOfs then
-            DB.SetOpt("mapX", xOfs)
-            DB.SetOpt("mapY", yOfs)
+        if WorldMapScreenAnchor then
+            WorldMapScreenAnchor:StartMoving()
+            WorldMapScreenAnchor:SetPoint("TOPLEFT", WorldMapFrame)
+            WorldMapScreenAnchor:StopMovingOrSizing()
         end
     end)
 
