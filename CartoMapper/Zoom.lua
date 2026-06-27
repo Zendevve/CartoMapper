@@ -207,6 +207,13 @@ local function SetupWorldMapFrame()
     WorldMapScrollFrame.moved = false
     WorldMapScrollFrame.manuallyPanned = false
 
+    -- Immediately set zoom state to prevent click-to-pan race conditions on deferred updates
+    if CartoMapper.DB.GetOpt("zoom") and CartoMapper.DB.GetOpt("rememberZoom") and GetCurrentMapZone() == PreviousState.zone then
+        WorldMapScrollFrame.zoomedIn = PreviousState.scale > MIN_ZOOM
+    else
+        WorldMapScrollFrame.zoomedIn = false
+    end
+
     -- Adapt coordinates of quest tracker and frame positions based on WotLK sizes
     WorldMapScrollFrame:ClearAllPoints()
     if WORLDMAP_SETTINGS.size == WORLDMAP_QUESTLIST_SIZE then
@@ -374,6 +381,12 @@ end
 -- Click and Drag Panning
 local function WorldMapButton_OnMouseDown(self, button)
     if not CartoMapper.DB.GetOpt("zoom") then return end
+    
+    -- Sync zoomedIn state with actual detail frame scale to prevent any event order/timing issues
+    if WorldMapDetailFrame:GetScale() > 1.001 then
+        WorldMapScrollFrame.zoomedIn = true
+    end
+
     if button == "LeftButton" and WorldMapScrollFrame.zoomedIn then
         WorldMapScrollFrame.panning = true
         local x, y = GetCursorPosition()
@@ -410,8 +423,9 @@ local function WorldMapScrollFrame_OnPan(cursorX, cursorY)
     local dX = WorldMapScrollFrame.cursorX - cursorX
     local dY = cursorY - WorldMapScrollFrame.cursorY
     local scale = WorldMapScrollFrame:GetEffectiveScale()
-    dX = dX / scale
-    dY = dY / scale
+    local detailScale = WorldMapDetailFrame:GetScale() or 1.0
+    dX = (dX / scale) / detailScale
+    dY = (dY / scale) / detailScale
     if math.abs(dX) >= 1 or math.abs(dY) >= 1 then
         WorldMapScrollFrame.moved = true
         

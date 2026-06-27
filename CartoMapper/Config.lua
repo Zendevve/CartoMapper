@@ -77,7 +77,8 @@ function CartoMapper.CreateConfigFrame()
         end
         if reloadNeeded and configFrame.reloadBtn then
             configFrame.reloadBtn:UnlockHighlight()
-            configFrame.reloadBtn:SetTextColor(1, 0.2, 0.2)
+            local fs = configFrame.reloadBtn:GetFontString()
+            if fs then fs:SetTextColor(1, 0.2, 0.2) end
         end
     end)
 
@@ -214,7 +215,8 @@ function CartoMapper.CreateConfigFrame()
                 if val ~= initialValues[key] then
                     reloadNeeded = true
                     reloadBtn:LockHighlight()
-                    reloadBtn:SetTextColor(1, 0.2, 0.2)
+                    local fs = reloadBtn:GetFontString()
+                    if fs then fs:SetTextColor(1, 0.2, 0.2) end
                 end
             end
         end)
