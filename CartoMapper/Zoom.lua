@@ -483,8 +483,9 @@ local function WorldMapButton_OnUpdate(self, elapsed)
         PositionWorldMapArrowFrame("CENTER", "WorldMapDetailFrame", "TOPLEFT", arrowX, arrowY)
         ShowWorldMapArrowFrame(nil)
 
+        local detailScale = WorldMapDetailFrame:GetScale()
         WorldMapPlayer:ClearAllPoints()
-        WorldMapPlayer:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", playerX * WorldMapDetailFrame:GetWidth(), -playerY * WorldMapDetailFrame:GetHeight())
+        WorldMapPlayer:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", playerX * WorldMapDetailFrame:GetWidth() * detailScale, -playerY * WorldMapDetailFrame:GetHeight() * detailScale)
         WorldMapPlayer:SetSize(36, 36)
         if WorldMapPlayer.Icon then
             WorldMapPlayer.Icon:SetRotation(PlayerArrowFrame:GetFacing() or 0)
