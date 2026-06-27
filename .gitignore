@@ -1,2 +1,5 @@
 *.py
 *.log
+.kilo/
+refs/
+.gemini/

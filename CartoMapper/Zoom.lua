@@ -8,7 +8,7 @@ local Zoom = {}
 CartoMapper.modules["zoom"] = Zoom
 
 function CartoMapper.UpdateClickThrough()
-    local state = not (WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapperDB.clickThrough)
+    local state = not (WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapper.DB.GetOpt("clickThrough"))
     WorldMapFrame:EnableMouse(state)
     WorldMapScrollFrame:EnableMouse(state)
     WorldMapButton:EnableMouse(state)
@@ -19,7 +19,10 @@ function CartoMapper.UpdateMapOpacity()
     if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
         local speed = GetUnitSpeed("player")
         local moving = (speed > 0)
-        local targetAlpha = moving and (CartoMapperDB.movingOpacity or 0.5) or (CartoMapperDB.stationaryOpacity or 1.0)
+        if moving and CartoMapper.DB.GetOpt("NoFadeCursor") and WorldMapFrame:IsMouseOver() then
+            moving = false
+        end
+        local targetAlpha = moving and (CartoMapper.DB.GetOpt("movingOpacity") or 0.5) or (CartoMapper.DB.GetOpt("stationaryOpacity") or 1.0)
         WorldMapFrame:SetAlpha(targetAlpha)
         currentAlpha = targetAlpha
     else
@@ -36,7 +39,10 @@ faderFrame:SetScript("OnUpdate", function(self, elapsed)
     
     local speed = GetUnitSpeed("player")
     local moving = (speed > 0)
-    local targetAlpha = moving and (CartoMapperDB.movingOpacity or 0.5) or (CartoMapperDB.stationaryOpacity or 1.0)
+    if moving and CartoMapper.DB.GetOpt("NoFadeCursor") and WorldMapFrame:IsMouseOver() then
+        moving = false
+    end
+    local targetAlpha = moving and (CartoMapper.DB.GetOpt("movingOpacity") or 0.5) or (CartoMapper.DB.GetOpt("stationaryOpacity") or 1.0)
     
     if currentAlpha ~= targetAlpha then
         local step = elapsed * 3
@@ -71,7 +77,7 @@ end
 
 local function UpdateDetailTilesVisibility()
     local numTiles = NUM_WORLDMAP_DETAIL_TILES or 12
-    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapperDB.borderless and GetCurrentMapZone() > 0 and (GetNumMapOverlays() > 0 or CartoMapperDB.fogClear) then
+    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapper.DB.GetOpt("borderless") and GetCurrentMapZone() > 0 and (GetNumMapOverlays() > 0 or CartoMapper.DB.GetOpt("fogClear")) then
         for i = 1, numTiles do
             local tile = _G["WorldMapDetailTile" .. i]
             if tile then tile:Hide() end
@@ -199,7 +205,7 @@ local function SetupWorldMapFrame()
         end
 
         WorldMapFrame:SetPoint("TOPLEFT", WorldMapScreenAnchor or UIParent, 0, 0)
-        WorldMapFrame:SetScale(CartoMapperDB.mapScale or 1.0)
+        WorldMapFrame:SetScale(CartoMapper.DB.GetOpt("mapScale") or 1.0)
         WorldMapFrame:SetMovable("true")
         WorldMapTitleButton:Show()
         WorldMapTitleButton:ClearAllPoints()
@@ -228,7 +234,7 @@ local function SetupWorldMapFrame()
     WorldMapScrollFrame:SetVerticalScroll(0)
 
     -- Persist zoom across reopenings of the same zone
-    if CartoMapperDB.rememberZoom and GetCurrentMapZone() == PreviousState.zone then
+    if CartoMapper.DB.GetOpt("rememberZoom") and GetCurrentMapZone() == PreviousState.zone then
         SetDetailFrameScale(PreviousState.scale)
         WorldMapScrollFrame:SetHorizontalScroll(PreviousState.panX)
         WorldMapScrollFrame:SetVerticalScroll(PreviousState.panY)
@@ -248,7 +254,7 @@ local function SetupWorldMapFrame()
     updatePointRelativeTo(WorldMapQuestDetailScrollFrame, WorldMapScrollFrame)
 
     -- Handle borderless windowed map elements initial visibility
-    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapperDB.borderless then
+    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapper.DB.GetOpt("borderless") then
         WorldMapFrameMiniBorderLeft:Hide()
         WorldMapFrameMiniBorderRight:Hide()
         WorldMapFrameTitle:Hide()
@@ -277,7 +283,7 @@ end
 
 -- Mouse Scroll Zoom Handler
 local function WorldMapScrollFrame_OnMouseWheel(self, delta)
-    if not CartoMapperDB.zoom then return end
+    if not CartoMapper.DB.GetOpt("zoom") then return end
     WorldMapScrollFrame.manuallyPanned = false
     -- Ctrl + Scroll scales the windowed world map frame itself
     if IsControlKeyDown() and WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
@@ -287,7 +293,10 @@ local function WorldMapScrollFrame_OnMouseWheel(self, delta)
         newScale = math.min(MINIMODE_MAX_ZOOM, newScale)
 
         WorldMapFrame:SetScale(newScale)
-        CartoMapperDB.mapScale = newScale
+        CartoMapper.DB.SetOpt("mapScale", newScale)
+        if CartoMapperConfigFrame and CartoMapperConfigFrame:IsShown() then
+            CartoMapperConfigFrame:UpdateAllValues()
+        end
         return
     end
 
@@ -305,7 +314,9 @@ local function WorldMapScrollFrame_OnMouseWheel(self, delta)
     local oldScale = WorldMapDetailFrame:GetScale()
     local newScale = oldScale * (1.0 + delta * ZOOM_STEP)
     newScale = math.max(MIN_ZOOM, newScale)
-    newScale = math.min(MAX_ZOOM, newScale)
+    
+    local maxZoomLimit = CartoMapper.DB.GetOpt("maxZoom") or 10.0
+    newScale = math.min(maxZoomLimit, newScale)
 
     SetDetailFrameScale(newScale)
 
@@ -330,7 +341,7 @@ end
 
 -- Click and Drag Panning
 local function WorldMapButton_OnMouseDown(self, button)
-    if not CartoMapperDB.zoom then return end
+    if not CartoMapper.DB.GetOpt("zoom") then return end
     if button == "LeftButton" and WorldMapScrollFrame.zoomedIn then
         WorldMapScrollFrame.panning = true
         local x, y = GetCursorPosition()
@@ -343,7 +354,7 @@ local function WorldMapButton_OnMouseDown(self, button)
 end
 
 local function WorldMapButton_OnMouseUp(self, button)
-    if not CartoMapperDB.zoom then
+    if not CartoMapper.DB.GetOpt("zoom") then
         WorldMapButton_OnClick(WorldMapButton, button)
         return
     end
@@ -386,7 +397,7 @@ end
 local function WorldMapButton_OnUpdate(self, elapsed)
     -- Handle borderless windowed map elements visibility on mouse hover
     if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
-        if CartoMapperDB.borderless then
+        if CartoMapper.DB.GetOpt("borderless") then
             if WorldMapFrame:IsMouseOver() then
                 WorldMapFrameMiniBorderLeft:Show()
                 WorldMapFrameMiniBorderRight:Show()
@@ -413,7 +424,7 @@ local function WorldMapButton_OnUpdate(self, elapsed)
     end
 
     -- Auto-center on player if followPlayer is enabled, map is zoomed in, and we haven't manually panned
-    if CartoMapperDB.followPlayer and WorldMapScrollFrame.zoomedIn and not WorldMapScrollFrame.manuallyPanned and not WorldMapScrollFrame.panning then
+    if CartoMapper.DB.GetOpt("followPlayer") and WorldMapScrollFrame.zoomedIn and not WorldMapScrollFrame.manuallyPanned and not WorldMapScrollFrame.panning then
         local playerX, playerY = GetPlayerMapPosition("player")
         if playerX > 0 and playerY > 0 then
             local scale = WorldMapDetailFrame:GetScale()
@@ -441,7 +452,7 @@ local function WorldMapButton_OnUpdate(self, elapsed)
     local adjustedX = (x - (centerX - (width / 2))) / width
 
     local name, fileName, texPercentageX, texPercentageY, textureX, textureY, scrollChildX, scrollChildY
-    if self:IsMouseOver() then
+    if self:IsMouseOver() and (not WorldMapScrollFrame or WorldMapScrollFrame:IsMouseOver()) then
         name, fileName, texPercentageX, texPercentageY, textureX, textureY, scrollChildX, scrollChildY = UpdateMapHighlight(adjustedX, adjustedY)
     end
 
@@ -746,9 +757,13 @@ function Zoom.Enable()
     end)
 end
 
+function Zoom.Disable()
+    -- No-op since hooks are loaded on ADDON_LOADED and cannot be undone live
+end
+
 function CartoMapper.UpdateZoom()
     if not WorldMapScrollFrame then return end
-    if not CartoMapperDB.zoom then
+    if not CartoMapper.DB.GetOpt("zoom") then
         -- Reset zoom state to default
         SetDetailFrameScale(1.0)
         WorldMapScrollFrame:SetHorizontalScroll(0)

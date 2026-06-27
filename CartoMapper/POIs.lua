@@ -5,6 +5,7 @@ Points of Interest module (Dungeons, Flight paths, Spirit healers, Zone crossing
 
 local POIs = {}
 CartoMapper.modules["pois"] = POIs
+local DB = CartoMapper.DB
 
 local POIData = {
     ["Alterac"] = {
@@ -527,6 +528,7 @@ local POIData = {
 }
 
 
+local pinPool = {}
 local activePins = {}
 local tooltipFrame
 
@@ -534,6 +536,7 @@ local tooltipFrame
 local Textures = {
     ["Dungeon"] = "Interface\\Minimap\\MiniMap-DungeonLocPort",
     ["Raid"] = "Interface\\Minimap\\MiniMap-RaidPort",
+    ["Dunraid"] = "Interface\\Minimap\\MiniMap-DungeonLocPort",
     ["FlightA"] = "Interface\\TaxiFrame\\UI-Taxi-Icon-Green",
     ["FlightH"] = "Interface\\TaxiFrame\\UI-Taxi-Icon-Green",
     ["FlightN"] = "Interface\\TaxiFrame\\UI-Taxi-Icon-Green",
@@ -544,10 +547,33 @@ local Textures = {
     ["Arrow"] = "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up",
 }
 
-local function ClearPins()
+local function AcquirePin()
+    local pin = tremove(pinPool)
+    if not pin then
+        pin = CreateFrame("Button", nil, WorldMapDetailFrame)
+        pin:SetSize(16, 16)
+        local tex = pin:CreateTexture(nil, "ARTWORK")
+        tex:SetAllPoints()
+        pin.texture = tex
+    end
+    pin:SetParent(WorldMapDetailFrame)
+    pin:Show()
+    tinsert(activePins, pin)
+    return pin
+end
+
+local function ReleasePins()
     for _, pin in ipairs(activePins) do
         pin:Hide()
         pin:SetParent(nil)
+        pin:SetScript("OnEnter", nil)
+        pin:SetScript("OnLeave", nil)
+        pin:SetScript("OnClick", nil)
+        pin.targetMapID = nil
+    end
+    -- Move all active pins to the pool in a single sweep
+    for _, pin in ipairs(activePins) do
+        tinsert(pinPool, pin)
     end
     wipe(activePins)
 end
@@ -579,8 +605,8 @@ local function Pin_OnClick(self)
 end
 
 local function DrawPins()
-    ClearPins()
-    if not CartoMapperDB.pois then return end
+    ReleasePins()
+    if not DB.GetOpt("pois") then return end
     
     local mapFileName = GetMapInfo()
     if not mapFileName or not POIData[mapFileName] then return end
@@ -588,49 +614,65 @@ local function DrawPins()
     local w = WorldMapDetailFrame:GetWidth()
     local h = WorldMapDetailFrame:GetHeight()
     local scale = WorldMapDetailFrame:GetScale()
+    local playerFaction = UnitFactionGroup("player") or "Alliance"
 
     for _, pinInfo in ipairs(POIData[mapFileName]) do
         local pinType, px, py, title, subtext, texName, minLevel, maxLevel, _, _, _, arrowAngle, targetMapID = unpack(pinInfo)
 
-        local pin = CreateFrame("Button", nil, WorldMapDetailFrame)
-        pin:SetSize(16, 16)
-        
-        -- Inverse scale with map zoom so pins stay readable
-        pin:SetScale(1 / scale)
-        
-        -- Set position relative to WorldMapDetailFrame
-        local x = (px / 100) * w
-        local y = -(py / 100) * h
-        pin:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", x, y)
-
-        -- Texture
-        local tex = pin:CreateTexture(nil, "ARTWORK")
-        tex:SetAllPoints()
-        tex:SetTexture(Textures[pinType] or "Interface\\Minimap\\MiniMap-QuestGiver")
-        
-        -- Rotate arrow texture if needed
-        if pinType == "Arrow" and arrowAngle then
-            -- Simple rotation approximation if desired, or let it face default
+        -- Category and faction filtering logic
+        local isVisible = false
+        if pinType == "Dungeon" or pinType == "Raid" or pinType == "Dunraid" then
+            if DB.GetOpt("ShowDungeonIcons") then isVisible = true end
+        elseif pinType == "Spirit" then
+            if DB.GetOpt("ShowSpiritHealers") then isVisible = true end
+        elseif pinType == "Arrow" then
+            if DB.GetOpt("ShowZoneCrossings") then isVisible = true end
+        elseif pinType == "FlightA" or pinType == "TravelA" then
+            if playerFaction == "Alliance" then
+                if DB.GetOpt("ShowTravelPoints") then isVisible = true end
+            else
+                if DB.GetOpt("ShowTravelOpposing") then isVisible = true end
+            end
+        elseif pinType == "FlightH" or pinType == "TravelH" then
+            if playerFaction == "Horde" then
+                if DB.GetOpt("ShowTravelPoints") then isVisible = true end
+            else
+                if DB.GetOpt("ShowTravelOpposing") then isVisible = true end
+            end
+        elseif pinType == "FlightN" or pinType == "TravelN" then
+            if DB.GetOpt("ShowTravelPoints") then isVisible = true end
         end
 
-        pin.title = title
-        
-        -- Append dungeon level range to title if present
-        if minLevel and maxLevel then
-            pin.title = title .. " (" .. minLevel .. "-" .. maxLevel .. ")"
-        end
-        
-        pin.subtext = subtext
-        pin.targetMapID = targetMapID
+        if isVisible then
+            local pin = AcquirePin()
+            
+            -- Inverse scale with map zoom so pins stay readable
+            pin:SetScale(1 / scale)
+            
+            -- Set position relative to WorldMapDetailFrame
+            local x = (px / 100) * w
+            local y = -(py / 100) * h
+            pin:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", x, y)
 
-        pin:SetScript("OnEnter", Pin_OnEnter)
-        pin:SetScript("OnLeave", Pin_OnLeave)
-        if targetMapID then
-            pin:SetScript("OnClick", Pin_OnClick)
-        end
+            -- Texture
+            pin.texture:SetTexture(Textures[pinType] or "Interface\\Minimap\\MiniMap-QuestGiver")
 
-        pin:Show()
-        tinsert(activePins, pin)
+            pin.title = title
+            
+            -- Append dungeon level range to title if present
+            if minLevel and maxLevel then
+                pin.title = title .. " (" .. minLevel .. "-" .. maxLevel .. ")"
+            end
+            
+            pin.subtext = subtext
+            pin.targetMapID = targetMapID
+
+            pin:SetScript("OnEnter", Pin_OnEnter)
+            pin:SetScript("OnLeave", Pin_OnLeave)
+            if targetMapID then
+                pin:SetScript("OnClick", Pin_OnClick)
+            end
+        end
     end
 end
 
@@ -643,21 +685,34 @@ local function UpdatePinScaling()
 end
 
 function POIs.Enable()
-    if POIs.enabled then return end
     POIs.enabled = true
-    hooksecurefunc("WorldMapFrame_Update", DrawPins)
-    hooksecurefunc("WorldMapFrame_SetPOIMaxBounds", UpdatePinScaling)
+    
+    if not POIs.hookedPOI then
+        hooksecurefunc("WorldMapFrame_Update", function()
+            if POIs.enabled then DrawPins() end
+        end)
+        hooksecurefunc("WorldMapFrame_SetPOIMaxBounds", function()
+            if POIs.enabled then UpdatePinScaling() end
+        end)
+        POIs.hookedPOI = true
+    end
+    
+    DrawPins()
+end
+
+function POIs.Disable()
+    POIs.enabled = false
+    ReleasePins()
 end
 
 function CartoMapper.UpdatePOIs()
-    if CartoMapperDB.pois then
+    if DB.GetOpt("pois") then
         if not POIs.enabled then
             POIs.Enable()
-        end
-        if WorldMapFrame and WorldMapFrame:IsShown() then
-            WorldMapFrame_Update()
+        else
+            DrawPins()
         end
     else
-        ClearPins()
+        POIs.Disable()
     end
 end

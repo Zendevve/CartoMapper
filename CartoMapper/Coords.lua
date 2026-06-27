@@ -5,6 +5,7 @@ Coordinate display for the World Map.
 
 local Coords = {}
 CartoMapper.modules["coords"] = Coords
+Coords.liveToggle = true
 
 local cursortext, playertext
 local texttemplate = "%s: %.1f, %.1f"
@@ -21,6 +22,10 @@ local function MouseXY()
     local cy = (top - y/scale) / height
 
     if cx < 0 or cx > 1 or cy < 0 or cy > 1 then
+        return nil, nil
+    end
+
+    if WorldMapScrollFrame and WorldMapScrollFrame:IsShown() and not WorldMapScrollFrame:IsMouseOver() then
         return nil, nil
     end
 
@@ -45,6 +50,7 @@ local function OnUpdate(self, elapsed)
 end
 
 local function UpdatePosition()
+    if not cursortext or not playertext then return end
     if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
         cursortext:ClearAllPoints()
         cursortext:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOM", 15, -2)
@@ -59,15 +65,22 @@ local function UpdatePosition()
 end
 
 function Coords.Enable()
-    if Coords.enabled then return end
+    if Coords.enabled then 
+        local frame = _G["CartoMapper_CoordsFrame"]
+        if frame then frame:Show() end
+        return 
+    end
     Coords.enabled = true
 
-    local display = CreateFrame("Frame", "CartoMapper_CoordsFrame", WorldMapFrame)
-    cursortext = display:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    playertext = display:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    local display = _G["CartoMapper_CoordsFrame"] or CreateFrame("Frame", "CartoMapper_CoordsFrame", WorldMapFrame)
+    if not cursortext then
+        cursortext = display:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+        playertext = display:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    end
     
     UpdatePosition()
     display:SetScript("OnUpdate", OnUpdate)
+    display:Show()
 
     -- Update position when map changes sizes
     hooksecurefunc("WorldMapFrame_SetFullMapView", UpdatePosition)
@@ -76,16 +89,10 @@ function Coords.Enable()
     hooksecurefunc("WorldMap_ToggleSizeUp", UpdatePosition)
 end
 
-function CartoMapper.UpdateCoordsVisibility()
-    if CartoMapperDB.coords then
-        if not Coords.enabled then
-            Coords.Enable()
-        else
-            local frame = _G["CartoMapper_CoordsFrame"]
-            if frame then frame:Show() end
-        end
-    else
-        local frame = _G["CartoMapper_CoordsFrame"]
-        if frame then frame:Hide() end
+function Coords.Disable()
+    local frame = _G["CartoMapper_CoordsFrame"]
+    if frame then
+        frame:Hide()
+        frame:SetScript("OnUpdate", nil)
     end
 end

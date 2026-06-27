@@ -5,6 +5,7 @@
 ## Version: 1.0.0
 ## SavedVariables: CartoMapperDB
 
+DB.lua
 CartoMapper.lua
 ZoneInfo.lua
 Coords.lua
@@ -13,3 +14,4 @@ GroupIcons.lua
 FogClear.lua
 Zoom.lua
 POIs.lua
+Config.lua

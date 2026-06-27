@@ -1,9 +1,12 @@
 --[[--------------------------------------------------------------------------------------------
 ZoneInfo.lua
 Database and formatting for Zone level ranges and minimum Fishing skill levels.
+Handles hiding of town and city landmark icons.
 --------------------------------------------------------------------------------------------]]--
 
-CartoMapper.modules["zoneInfo"] = {}
+local ZoneInfo = {}
+CartoMapper.modules["zoneInfo"] = ZoneInfo
+ZoneInfo.liveToggle = true
 
 local zoneData = {
     -- Eastern Kingdoms
@@ -88,7 +91,7 @@ local zoneData = {
 }
 
 function CartoMapper.GetFormattedZoneLevelText(zoneName)
-    if not CartoMapperDB.zoneLevels then return zoneName end
+    if not CartoMapper.DB.GetOpt("zoneLevels") then return zoneName end
     local data = zoneData[zoneName]
     if not data then return zoneName end
     
@@ -111,4 +114,40 @@ function CartoMapper.GetFormattedZoneLevelText(zoneName)
         formatted = formatted .. " |cffffb000[Fish: " .. data.fish .. "]|r"
     end
     return formatted
+end
+
+local function HideTownCityPOIs()
+    if not ZoneInfo.enabled or not CartoMapper.DB.GetOpt("hideTownCityIcons") then return end
+    -- Check if we are viewing a continent map (Continent > 0, Zone == 0)
+    if GetCurrentMapContinent() > 0 and GetCurrentMapZone() == 0 then
+        local numLandmarks = GetNumMapLandmarks()
+        for i = 1, numLandmarks do
+            local name, description, textureIndex, x, y, mapLinkID, showInBattleMinimap = GetMapLandmarkInfo(i)
+            local button = _G["WorldMapFramePOI" .. i]
+            if button and (textureIndex == 1 or textureIndex == 2) then
+                button:Hide()
+            end
+        end
+    end
+end
+
+function ZoneInfo.Enable()
+    ZoneInfo.enabled = true
+    
+    if not ZoneInfo.hookedPOI then
+        hooksecurefunc("WorldMapPOIFrame_Update", HideTownCityPOIs)
+        ZoneInfo.hookedPOI = true
+    end
+
+    if WorldMapFrame and WorldMapFrame:IsShown() then
+        WorldMapPOIFrame_Update()
+    end
+end
+
+function ZoneInfo.Disable()
+    ZoneInfo.enabled = false
+    -- Refresh POI frame to show town/city landmarks again
+    if WorldMapFrame and WorldMapFrame:IsShown() then
+        WorldMapPOIFrame_Update()
+    end
 end

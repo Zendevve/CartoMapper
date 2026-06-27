@@ -5,13 +5,14 @@ Class-colored player and group icons with raid subgroups.
 
 local GroupIcons = CreateFrame("Frame")
 CartoMapper.modules["groupIcons"] = GroupIcons
+GroupIcons.liveToggle = true
 
 local assetPath = "Interface\\AddOns\\CartoMapper\\assets\\"
 local normalTexture = assetPath .. "Normal"
 local groupTexturePattern = assetPath .. "Group%d"
 
 local function UpdateUnitIcon(tex, unit)
-    if not CartoMapperDB.groupIcons then return end
+    if not CartoMapper.DB.GetOpt("groupIcons") then return end
     if not tex or not unit then return end
 
     -- Get class and subgroup info
@@ -100,7 +101,6 @@ local function FixBattlefieldUnits(state)
 end
 
 function GroupIcons.Enable()
-    if GroupIcons.enabled then return end
     GroupIcons.enabled = true
 
     -- Support custom class color addons
@@ -109,15 +109,24 @@ function GroupIcons.Enable()
     end
 
     FixWorldMapUnits(true)
-    hooksecurefunc("WorldMapUnit_Update", function(unitFrame)
-        UpdateUnitIcon(unitFrame.icon, unitFrame.unit)
-    end)
+    
+    -- Check if we hooked it already
+    if not GroupIcons.hookedUpdate then
+        hooksecurefunc("WorldMapUnit_Update", function(unitFrame)
+            if GroupIcons.enabled then
+                UpdateUnitIcon(unitFrame.icon, unitFrame.unit)
+            end
+        end)
+        GroupIcons.hookedUpdate = true
+    end
 
     if not IsAddOnLoaded("Blizzard_BattlefieldMinimap") then
         GroupIcons:RegisterEvent("ADDON_LOADED")
         GroupIcons:SetScript("OnEvent", function(self, event, addon)
             if addon == "Blizzard_BattlefieldMinimap" then
-                FixBattlefieldUnits(true)
+                if GroupIcons.enabled then
+                    FixBattlefieldUnits(true)
+                end
                 self:UnregisterEvent("ADDON_LOADED")
             end
         end)
@@ -126,16 +135,8 @@ function GroupIcons.Enable()
     end
 end
 
-function CartoMapper.UpdateGroupIcons()
-    if CartoMapperDB.groupIcons then
-        if not GroupIcons.enabled then
-            GroupIcons.Enable()
-        else
-            FixWorldMapUnits(true)
-            FixBattlefieldUnits(true)
-        end
-    else
-        FixWorldMapUnits(false)
-        FixBattlefieldUnits(false)
-    end
+function GroupIcons.Disable()
+    GroupIcons.enabled = false
+    FixWorldMapUnits(false)
+    FixBattlefieldUnits(false)
 end

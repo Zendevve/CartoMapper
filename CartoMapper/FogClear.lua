@@ -6,6 +6,7 @@ Uses Mapster's bit-packed coordinate database.
 
 local FogClear = {}
 CartoMapper.modules["fogClear"] = FogClear
+local DB = CartoMapper.DB
 
 local errata = {
 	["LochModan"] = {
@@ -1123,13 +1124,13 @@ local function UpdateOverlayTextures(frame, frameName, scale, alphaMod)
                     texture:SetAlpha(1 - (alphaMod or 0))
                     texture:SetDrawLayer("ARTWORK")
                 else
-                    -- Get unexplored area styling from CartoMapperDB
-                    local r = CartoMapperDB.fogR or 0.2
-                    local g = CartoMapperDB.fogG or 0.6
-                    local b = CartoMapperDB.fogB or 1.0
-                    local alpha = CartoMapperDB.fogTransparency or 0.5
+                    -- Get unexplored area styling from CartoMapper DB
+                    local r = DB.GetOpt("fogR") or 0.2
+                    local g = DB.GetOpt("fogG") or 0.6
+                    local b = DB.GetOpt("fogB") or 1.0
+                    local alpha = DB.GetOpt("fogTransparency") or 0.5
                     
-                    if CartoMapperDB.fogColorStyle == 1 then
+                    if DB.GetOpt("fogColorStyle") == 1 then
                         r, g, b = 1, 1, 1
                     end
                     
@@ -1178,25 +1179,31 @@ function CartoMapper.OpenFogColorPicker()
         else
             r, g, b = ColorPickerFrame:GetColorRGB()
         end
-        CartoMapperDB.fogR = r
-        CartoMapperDB.fogG = g
-        CartoMapperDB.fogB = b
-        CartoMapperDB.fogColorStyle = 2 -- Custom color style
+        DB.SetOpt("fogR", r)
+        DB.SetOpt("fogG", g)
+        DB.SetOpt("fogB", b)
+        DB.SetOpt("fogColorStyle", 2) -- Custom color style
         CartoMapper.UpdateFogClearSettings()
+        if CartoMapperConfigFrame then
+            CartoMapperConfigFrame:UpdateAllValues()
+        end
     end
 
     local function OpacityCallback()
         local alpha = opacityFunc and opacityFunc() or (1 - ColorPickerFrame:GetOpacity())
-        CartoMapperDB.fogTransparency = alpha
+        DB.SetOpt("fogTransparency", alpha)
         CartoMapper.UpdateFogClearSettings()
+        if CartoMapperConfigFrame then
+            CartoMapperConfigFrame:UpdateAllValues()
+        end
     end
 
     ColorPickerFrame.func = ColorCallback
     ColorPickerFrame.hasOpacity = true
     ColorPickerFrame.opacityFunc = OpacityCallback
-    ColorPickerFrame.opacity = 1 - (CartoMapperDB.fogTransparency or 0.7)
+    ColorPickerFrame.opacity = 1 - (DB.GetOpt("fogTransparency") or 0.7)
     
-    local r, g, b = CartoMapperDB.fogR or 0.2, CartoMapperDB.fogG or 0.6, CartoMapperDB.fogB or 1.0
+    local r, g, b = DB.GetOpt("fogR") or 0.2, DB.GetOpt("fogG") or 0.6, DB.GetOpt("fogB") or 1.0
     ColorPickerFrame:SetColorRGB(r, g, b)
     
     -- Setup fallback restore values
@@ -1207,29 +1214,71 @@ function CartoMapper.OpenFogColorPicker()
 end
 
 function FogClear.Enable()
+    if FogClear.enabled then return end
+    FogClear.enabled = true
+
     -- Hook GetNumMapOverlays to return 0 when overlays are initialized
     -- This prevents default Blizzard UI from drawing standard overlays
-    local original_GetNumMapOverlays = GetNumMapOverlays
-    function GetNumMapOverlays()
-        if NUM_WORLDMAP_OVERLAYS == 0 then
-            return original_GetNumMapOverlays()
+    if not FogClear.hookedGetNumMapOverlays then
+        local original_GetNumMapOverlays = GetNumMapOverlays
+        function GetNumMapOverlays()
+            if FogClear.enabled and NUM_WORLDMAP_OVERLAYS == 0 then
+                return original_GetNumMapOverlays()
+            end
+            if not FogClear.enabled then
+                return original_GetNumMapOverlays()
+            end
+            return 0
         end
-        return 0
+        FogClear.hookedGetNumMapOverlays = true
     end
 
     -- Hook updates
-    hooksecurefunc("WorldMapFrame_Update", UpdateWorldMapOverlays)
-    
-    if not IsAddOnLoaded("Blizzard_BattlefieldMinimap") then
-        local bfm_hook = CreateFrame("Frame")
-        bfm_hook:RegisterEvent("ADDON_LOADED")
-        bfm_hook:SetScript("OnEvent", function(self, event, addon)
-            if addon == "Blizzard_BattlefieldMinimap" then
-                hooksecurefunc("BattlefieldMinimap_Update", UpdateBattlefieldMinimapOverlays)
-                self:UnregisterEvent("ADDON_LOADED")
-            end
+    if not FogClear.hookedUpdates then
+        hooksecurefunc("WorldMapFrame_Update", function()
+            if FogClear.enabled then UpdateWorldMapOverlays() end
         end)
-    else
-        hooksecurefunc("BattlefieldMinimap_Update", UpdateBattlefieldMinimapOverlays)
+        
+        if not IsAddOnLoaded("Blizzard_BattlefieldMinimap") then
+            local bfm_hook = CreateFrame("Frame")
+            bfm_hook:RegisterEvent("ADDON_LOADED")
+            bfm_hook:SetScript("OnEvent", function(self, event, addon)
+                if addon == "Blizzard_BattlefieldMinimap" then
+                    hooksecurefunc("BattlefieldMinimap_Update", function()
+                        if FogClear.enabled then UpdateBattlefieldMinimapOverlays() end
+                    end)
+                    self:UnregisterEvent("ADDON_LOADED")
+                end
+            end)
+        else
+            hooksecurefunc("BattlefieldMinimap_Update", function()
+                if FogClear.enabled then UpdateBattlefieldMinimapOverlays() end
+            end)
+        end
+        FogClear.hookedUpdates = true
+    end
+
+    UpdateWorldMapOverlays()
+    UpdateBattlefieldMinimapOverlays()
+end
+
+function FogClear.Disable()
+    FogClear.enabled = false
+    -- Hide all custom overlay textures
+    local numOv = NUM_WORLDMAP_OVERLAYS or 0
+    for i = 1, numOv do
+        local tex = _G[string.format("WorldMapOverlay%d", i)]
+        if tex then tex:Hide() end
+    end
+    if BattlefieldMinimap then
+        local numBF = NUM_BATTLEFIELDMAP_OVERLAYS or 0
+        for i = 1, numBF do
+            local tex = _G[string.format("BattlefieldMinimapOverlay%d", i)]
+            if tex then tex:Hide() end
+        end
+    end
+    -- Trigger default update to restore original map
+    if WorldMapFrame and WorldMapFrame:IsShown() then
+        WorldMapFrame_Update()
     end
 end
