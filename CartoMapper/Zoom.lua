@@ -78,6 +78,8 @@ local PreviousState = {
     zone = 0
 }
 
+local deferFrame = CreateFrame("Frame")
+
 local function SetPOIMaxBounds()
     WorldMapScrollFrame.maxY = WorldMapDetailFrame:GetHeight() * -WORLDMAP_SETTINGS.size + 12
     WorldMapScrollFrame.maxX = WorldMapDetailFrame:GetWidth() * WORLDMAP_SETTINGS.size + 12
@@ -241,19 +243,34 @@ local function SetupWorldMapFrame()
     end
 
     WorldMapScrollFrame:SetScale(WORLDMAP_SETTINGS.size)
-    SetDetailFrameScale(1.0)
-    WorldMapDetailFrame:SetAllPoints(WorldMapScrollFrame)
-    WorldMapScrollFrame:SetHorizontalScroll(0)
-    WorldMapScrollFrame:SetVerticalScroll(0)
+    
+    -- Correct scroll child dimensions and remove parent constraints to prevent layout conflicts
+    WorldMapDetailFrame:ClearAllPoints()
+    WorldMapScrollFrame:SetScrollChild(WorldMapDetailFrame)
+    WorldMapDetailFrame:SetSize(1002, 668)
 
-    -- Persist zoom across reopenings of the same zone (only while zoom is actually enabled -
-    -- otherwise a remembered zoomed-in state could silently reapply itself even after the
-    -- user turned scroll-to-zoom off).
-    if CartoMapper.DB.GetOpt("zoom") and CartoMapper.DB.GetOpt("rememberZoom") and GetCurrentMapZone() == PreviousState.zone then
-        SetDetailFrameScale(PreviousState.scale)
-        WorldMapScrollFrame:SetHorizontalScroll(PreviousState.panX)
-        WorldMapScrollFrame:SetVerticalScroll(PreviousState.panY)
-    end
+    -- Defer scale and scroll updates to the next frame to allow the engine layout to process.
+    -- This resolves the "blank/invisible map" issue on reopening the map frame.
+    deferFrame:SetScript("OnUpdate", function(self)
+        self:SetScript("OnUpdate", nil)
+        if WorldMapFrame:IsShown() then
+            if CartoMapper.DB.GetOpt("zoom") and CartoMapper.DB.GetOpt("rememberZoom") and GetCurrentMapZone() == PreviousState.zone then
+                SetDetailFrameScale(PreviousState.scale)
+                WorldMapScrollFrame:SetHorizontalScroll(PreviousState.panX)
+                WorldMapScrollFrame:SetVerticalScroll(PreviousState.panY)
+                WorldMapScrollFrame.zoomedIn = PreviousState.scale > MIN_ZOOM
+            else
+                SetDetailFrameScale(1.0)
+                WorldMapScrollFrame:SetHorizontalScroll(0)
+                WorldMapScrollFrame:SetVerticalScroll(0)
+                WorldMapScrollFrame.zoomedIn = false
+            end
+            AfterScrollOrPan()
+            if WorldMapFrame_Update then
+                WorldMapFrame_Update()
+            end
+        end
+    end)
 
     WorldMapButton:SetScale(1.0)
     WorldMapButton:SetAllPoints(WorldMapDetailFrame)
