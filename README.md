@@ -1,67 +1,160 @@
-# 🗺️ CartoMapper
+# CartoMapper
 
-**The Ultimate Map Enhancement Addon for World of Warcraft: Wrath of the Lich King (3.3.5a)**
+**Unified Map Enhancement Addon for World of Warcraft: Wrath of the Lich King (3.3.5a)**
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/zendevve)
-
----
-
-## 🌟 The Vision & Craftsmanship
-
-For years, WotLK players have had to choose between running multiple heavy, conflicting map addons or settling for Blizzard's clunky, outdated default map. 
-
-**CartoMapper** was born from a desire for perfection. We meticulously reverse-engineered four of the greatest legacy map addons—**Mapster**, **Magnify-WotLK**, **Leatrix Maps**, and **MozzFullWorldMap**—deconstructing their databases and features, and stitching them back together into a single, cohesive, ultra-lightweight, and optimized master addon.
-
-This isn't a copy-paste compilation. It required custom script compilers to port old BCC database keys to WotLK zone IDs, fixing 15-year-old Blizzard coordinate rendering bugs, and writing custom Lua overrides to prevent player pin drift during zoom and pan operations. Every line of code was crafted to ensure maximum frame rate and zero memory bloat.
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=flat-square&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/zendevve)
 
 ---
 
-## ✨ Features
+## Overview
 
-*   🔍 **Smooth Scroll-to-Zoom & Drag-to-Pan**: Seamlessly zoom in towards your cursor and pan around the map. 
-*   🎯 **Zero-Drift Scale Correction**: Map pins (player arrow, raid members, flags, corpse, vehicles) scale dynamically and remain *perfectly* anchored to their actual coordinate positions on zoom.
-*   🧭 **High-Definition 2D Player Arrow**: Replaced the default 3D arrow with a high-definition 2D texture that clips properly inside the scroll viewport (so your arrow never awkwardly renders off the map edge).
-*   🌫️ **FogClear (Reveal Unexplored Areas)**: Automatically renders unexplored map regions as transparent overlays. Includes custom color styling options.
-*   📍 **Point of Interest (POI) Database**: Built-in coordinates for all dungeons, raids, flight paths, spirit healers, and zone transitions with interactive tooltips and click-to-transition map mechanics.
-*   👥 **Class-Colored Group Icons**: Party and raid members are shown with class colors and subgroup numbers (1–8), complete with pulsing indicators for dead (grey), in-combat (red), and AFK (purple) states.
-*   📐 **Cursor & Player Coordinates**: Lightweight, precise coordinates rendered at the bottom of the map.
-*   🖥️ **Ctrl + Scroll Window Scaling**: Easily scale the windowed map frame size up or down on the fly.
-*   🖼️ **Borderless Windowed Map**: Strip default black borders and buttons from the windowed map for a sleek, transparent overlay. Controls reappear on mouse hover.
-*   ⚔️ **Borderless Battlefield Minimap (Shift+M)**: Hides bulky default borders and base tiles for a sleek, transparent overlay.
+CartoMapper replaces multiple heavy map addons (Mapster, Magnify-WotLK, Leatrix Maps, MozzFullWorldMap) with a single, lightweight, high-performance package. It clears fog of war, enables scroll-to-zoom and drag-to-pan, displays coordinates, colors group icons by class, shows points of interest, and enhances the battlefield minimap — all with zero frame-rate impact.
 
 ---
 
-## ☕ Support the Journey (Why Donate?)
+## Features
 
-Building **CartoMapper** took dozens of hours of deep reverse-engineering, database translation, UI layout alignment, and client debugging. We believe that WotLK players deserve a modern, lag-free map experience without having to manage multiple bloated addons.
-
-This project is completely free, open-source, and ad-free. If CartoMapper has saved you space in your addon folder, prevented UI performance hiccups, or made your journey through Azeroth and Northrend more enjoyable, please consider supporting the project:
-
-### [👉 Click here to buy me a coffee! ☕](https://buymeacoffee.com/zendevve)
-
-*Your support is incredibly meaningful. It allows me to dedicate time to maintaining this addon, fixing bugs, and developing future features for the classic community.*
-
----
-
-## ⚙️ Installation
-
-1.  Download the repository.
-2.  Extract the `CartoMapper` folder to your WoW installation directory:
-    `World of Warcraft\Interface\AddOns\`
-3.  Ensure the folder is named exactly `CartoMapper` (not `CartoMapper-main`).
-4.  Log into the game and enjoy a beautifully enhanced map!
+| Feature | Description |
+|---------|-------------|
+| **Fog of War Clear** | Reveals unexplored map regions as transparent overlays with customizable tint colors |
+| **Scroll-to-Zoom & Drag-to-Pan** | Smooth mouse-wheel zoom (up to 10x) with cursor-centered scaling and click-and-drag panning |
+| **Coordinates** | Real-time cursor and player position coordinates at the bottom of the map |
+| **Class-Colored Group Icons** | Party/raid members displayed with class colors, subgroup numbers, and pulsing indicators (dead, combat, AFK) |
+| **Points of Interest** | Dungeon/raid portals, flight paths, spirit healers, and clickable zone-crossing arrows |
+| **Battlefield Minimap** | Enhanced Shift+M map with configurable size, opacity, unlock, and zoom |
+| **Zone Level Info** | Recommended level ranges and minimum fishing skill shown on zone tooltips |
+| **Borderless Windowed Map** | Hides default borders for a clean overlay; controls reappear on hover |
+| **Ctrl + Scroll Scaling** | Scale the windowed map frame size on the fly |
+| **Per-Character Settings** | Override global settings on a per-character basis |
 
 ---
 
-## 🛠️ Slash Commands
+## Installation
 
-Use `/cm` or `/cartomapper` in-game to manage settings:
+1. Download the latest release or clone this repository.
+2. Copy the `CartoMapper` folder into your WoW addon directory:
+   ```
+   World of Warcraft\Interface\AddOns\
+   ```
+3. Ensure the folder is named exactly `CartoMapper` (not `CartoMapper-main`).
+4. Log in and type `/cm` to open the configuration panel.
 
-*   `/cm status` — Displays the current status of all modular features.
-*   `/cm toggle <option>` — Toggles a specific module.
-    *   *Options*: `zoom`, `coords`, `battlemap`, `groupicons`, `fogclear`, `pois`, `borderless`
-*   `/reload` — Reloads the UI to apply toggled module changes.
+> [!NOTE]
+> The addon requires **WoW 3.3.5a (WotLK)**. It uses the `Interface: 30300` API.
 
 ---
 
-*Thank you for being part of the journey. See you in Azeroth!*
+## Slash Commands
+
+| Command | Description |
+|---------|-------------|
+| `/cm` or `/cartomapper` | Toggle the configuration panel |
+| `/cm status` | Print the current state of all modules to chat |
+| `/cm toggle <option>` | Toggle a specific module on or off |
+
+Available toggle options:
+
+- `zoom` — Scroll-to-zoom and drag-to-pan
+- `coords` — Cursor and player coordinates
+- `battleMap` — Enhanced battlefield minimap
+- `groupIcons` — Class-colored group icons
+- `fogClear` — Fog of war reveal
+- `pois` — Points of interest
+- `borderless` — Borderless windowed map
+- `minimapButton` — Minimap shortcut button
+
+Example: `/cm toggle fogclear`
+
+> [!TIP]
+> Some toggles require a `/reload` to take full effect. The configuration panel marks these with an asterisk (*).
+
+---
+
+## Configuration Panel
+
+Open with `/cm` or by clicking the minimap button. The panel has seven tabs:
+
+### General
+- Minimap button visibility
+- Remember zoom level across map openings
+- Show zone level and fishing skill info on tooltips
+
+### Map Window
+- Borderless mode (hides frame borders)
+- Click-through mode (interact through the map)
+- No fade on cursor hover
+- Hide town/city icons on continent maps
+- Map window scale (0.5x – 4.0x)
+- Stationary and moving opacity (0.1 – 1.0)
+
+### Zoom / Pan
+- Enable/disable scroll-to-zoom
+- Center map on player automatically
+- Maximum zoom scale (1x – 10x)
+- Player arrow and group icon sizes
+
+### Fog Clear
+- Enable/disable fog reveal
+- Fog tint style: Normal (overlay grid) or Custom colored tint
+- Fog transparency (0.1 – 1.0)
+- Custom color picker
+
+### Points of Interest
+- Master toggle for all POIs
+- Individual filters: dungeons & raids, same-faction flights, opposing-faction flights, spirit healers, zone crossings
+
+### Battlefield
+- Enable/disable enhanced battlefield map
+- Unlock for dragging
+- Center on player
+- Group and player arrow sizes
+- Battlefield map size and opacity
+- Maximum zoom limit
+
+### Group Icons
+- Class-colored icons with subgroup numbers (1–8)
+- Visual states: dead (grey), in-combat (red), AFK (purple)
+
+---
+
+## Per-Character Settings
+
+CartoMapper supports per-character setting overrides. Enable the **Per-Character Settings** checkbox in the configuration panel header to create a separate profile for the current character. Changes made while this checkbox is active will only affect that character.
+
+---
+
+## Architecture
+
+The addon is modular. Each feature is a separate Lua file that registers itself with the core:
+
+| Module | File | Description |
+|--------|------|-------------|
+| Core | `CartoMapper.lua` | Initialization, module loader, minimap button, slash commands |
+| Database | `DB.lua` | SavedVariables management, per-character profiles, migration |
+| Zone Info | `ZoneInfo.lua` | Zone level ranges, fishing skill data, town/city icon hiding |
+| Coordinates | `Coords.lua` | Cursor and player coordinate display |
+| Fog Clear | `FogClear.lua` | Unexplored area overlay rendering |
+| Battle Map | `BattleMap.lua` | Battlefield minimap customization |
+| Group Icons | `GroupIcons.lua` | Class-colored party/raid icons |
+| Zoom | `Zoom.lua` | Scroll-to-zoom, drag-to-pan, frame scaling |
+| POIs | `POIs.lua` | Points of interest database and rendering |
+| Config | `Config.lua` | Options panel GUI |
+
+---
+
+## Credits
+
+CartoMapper was built by analyzing and integrating database/coordinate work from these addons:
+
+- **Mapster** — Overlay database format
+- **Magnify-WotLK** — Zoom/pan framework
+- **Leatrix Maps** — Coordinate system
+- **MozzFullWorldMap** — Fog reveal data
+
+---
+
+## Support
+
+If CartoMapper improves your experience, consider supporting development:
+
+**[Buy Me A Coffee](https://buymeacoffee.com/zendevve)**
