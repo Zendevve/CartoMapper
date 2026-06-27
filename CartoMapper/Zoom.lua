@@ -99,9 +99,10 @@ local function SetDetailFrameScale(scale)
     WorldMapPOIFrame:SetScale(1 / WORLDMAP_SETTINGS.size)
     WorldMapBlobFrame:SetScale(scale)
 
-    WorldMapPlayer:SetScale(invScale)
-    WorldMapDeathRelease:SetScale(invScale)
-    WorldMapCorpse:SetScale(invScale)
+    local elementScale = invScale / WORLDMAP_SETTINGS.size
+    WorldMapPlayer:SetScale(elementScale)
+    WorldMapDeathRelease:SetScale(elementScale)
+    WorldMapCorpse:SetScale(elementScale)
 
     -- Party Members
     for i = 1, MAX_PARTY_MEMBERS do
