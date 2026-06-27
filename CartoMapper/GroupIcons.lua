@@ -11,6 +11,10 @@ local assetPath = "Interface\\AddOns\\CartoMapper\\assets\\"
 local normalTexture = assetPath .. "Normal"
 local groupTexturePattern = assetPath .. "Group%d"
 
+-- Saved so Disable() can restore the original table instead of leaving a shared
+-- global (other addons/UI elements read RAID_CLASS_COLORS too) permanently overwritten.
+local originalRaidClassColors
+
 local function UpdateUnitIcon(tex, unit)
     if not CartoMapper.DB.GetOpt("groupIcons") then return end
     if not tex or not unit then return end
@@ -105,6 +109,9 @@ function GroupIcons.Enable()
 
     -- Support custom class color addons
     if CUSTOM_CLASS_COLORS then
+        if not originalRaidClassColors then
+            originalRaidClassColors = RAID_CLASS_COLORS
+        end
         RAID_CLASS_COLORS = CUSTOM_CLASS_COLORS
     end
 
@@ -137,6 +144,9 @@ end
 
 function GroupIcons.Disable()
     GroupIcons.enabled = false
+    if originalRaidClassColors then
+        RAID_CLASS_COLORS = originalRaidClassColors
+    end
     FixWorldMapUnits(false)
     FixBattlefieldUnits(false)
 end

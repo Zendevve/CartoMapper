@@ -7,6 +7,10 @@ Handles hiding of town and city landmark icons.
 local ZoneInfo = {}
 CartoMapper.modules["zoneInfo"] = ZoneInfo
 ZoneInfo.liveToggle = true
+-- This module has no single matching boolean DB option (it gates two independent
+-- features, "zoneLevels" and "hideTownCityIcons", internally) so it must always be
+-- enabled at startup for its hook to be installed; see CartoMapper.lua's module loop.
+ZoneInfo.alwaysEnable = true
 
 local zoneData = {
     -- Eastern Kingdoms
@@ -135,12 +139,12 @@ function ZoneInfo.Enable()
     ZoneInfo.enabled = true
     
     if not ZoneInfo.hookedPOI then
-        hooksecurefunc("WorldMapPOIFrame_Update", HideTownCityPOIs)
+        hooksecurefunc("WorldMapFrame_UpdateLandmarks", HideTownCityPOIs)
         ZoneInfo.hookedPOI = true
     end
 
     if WorldMapFrame and WorldMapFrame:IsShown() then
-        WorldMapPOIFrame_Update()
+        WorldMapFrame_UpdateLandmarks()
     end
 end
 
@@ -148,6 +152,6 @@ function ZoneInfo.Disable()
     ZoneInfo.enabled = false
     -- Refresh POI frame to show town/city landmarks again
     if WorldMapFrame and WorldMapFrame:IsShown() then
-        WorldMapPOIFrame_Update()
+        WorldMapFrame_UpdateLandmarks()
     end
 end

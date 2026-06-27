@@ -311,13 +311,13 @@ function CartoMapper.CreateConfigFrame()
     CreateCheckbox(panelWin, "No Fade On Cursor Hover", "NoFadeCursor", "Suspends movement fading when hovering your cursor over the map.", 15, -75, false)
     CreateCheckbox(panelWin, "Hide Town & City Icons", "hideTownCityIcons", "Hides default Blizzard city/town icons on the continent maps.", 15, -105, true)
     
-    CreateSlider(panelWin, "Map Window Scale", "mapScale", 0.5, 1.5, 0.05, "%.2f", "Adjusts the overall scale/size of the windowed map frame.", 15, -165, false)
+    CreateSlider(panelWin, "Map Window Scale", "mapScale", 0.5, 4.0, 0.05, "%.2f", "Adjusts the overall scale/size of the windowed map frame. Also adjustable via Ctrl + Scroll on the map itself.", 15, -165, false)
     CreateSlider(panelWin, "Stationary Opacity", "stationaryOpacity", 0.1, 1.0, 0.05, "%.2f", "Opacity of the windowed map when standing still.", 15, -225, false)
     CreateSlider(panelWin, "Moving Opacity", "movingOpacity", 0.1, 1.0, 0.05, "%.2f", "Opacity of the windowed map when character is running.", 180, -225, false)
 
     -- Tab 3: Zoom / Pan
     local panelZoom = tabPanels[3]
-    CreateCheckbox(panelZoom, "Scroll-to-Zoom", "zoom", "Enables zooming map in/out with the mouse wheel.", 15, -15, true)
+    CreateCheckbox(panelZoom, "Scroll-to-Zoom", "zoom", "Enables zooming map in/out with the mouse wheel.", 15, -15, false)
     CreateCheckbox(panelZoom, "Center Map on Player", "followPlayer", "Automatically pans map to keep player arrow in view.", 15, -45, false)
     CreateSlider(panelZoom, "Maximum Zoom Scale", "maxZoom", 1.0, 10.0, 0.5, "%.1fx", "Sets the maximum zoom factor allowed on Scroll Zoom.", 15, -105, false)
     CreateSlider(panelZoom, "Player Arrow Scale", "playerArrowSize", 12, 36, 2, "%.0f px", "Sets the size of the player arrow on the main map.", 15, -165, false)
@@ -383,13 +383,7 @@ function CartoMapper.CreateConfigFrame()
     subLabel:SetTextColor(unpack(COLOR_CYAN))
 
     -- Add granular sub-options registry
-    CartoMapper.DB.RegisterDefaults({
-        ShowDungeonIcons = true,
-        ShowTravelPoints = true,
-        ShowTravelOpposing = false,
-        ShowSpiritHealers = true,
-        ShowZoneCrossings = true,
-    })
+    -- (defaults now registered by POIs.lua itself via POIs.defaults - see that file)
 
     CreateCheckbox(panelPOIs, "Dungeons & Raids", "ShowDungeonIcons", "Draw dungeon and raid instance portal icons.", 25, -75, false)
     CreateCheckbox(panelPOIs, "Same-Faction Flight Paths", "ShowTravelPoints", "Show flight masters, boats, and zeppelins of your faction.", 25, -105, false)
@@ -399,18 +393,10 @@ function CartoMapper.CreateConfigFrame()
 
     -- Tab 6: Battlefield Minimap
     local panelBattle = tabPanels[6]
-    CreateCheckbox(panelBattle, "Enable battlefield map", "battleMap", "Enhance Shift+M map frame options and visibility.", 15, -15, true)
+    CreateCheckbox(panelBattle, "Enable battlefield map", "battleMap", "Enhance Shift+M map frame options and visibility.", 15, -15, false)
     
     -- Sub settings
-    CartoMapper.DB.RegisterDefaults({
-        unlockBattlefield = false,
-        battleCenterOnPlayer = false,
-        battleGroupIconSize = 12,
-        battlePlayerArrowSize = 12,
-        battleMapSize = 300,
-        battleMapOpacity = 1.0,
-        battleMaxZoom = 2.0,
-    })
+    -- (defaults now registered by BattleMap.lua itself via BattleMap.defaults - see that file)
 
     CreateCheckbox(panelBattle, "Unlock Battlefield Map", "unlockBattlefield", "Allows dragging and resizing the battlefield map frame.", 15, -55, false)
     CreateCheckbox(panelBattle, "Center Map on Player", "battleCenterOnPlayer", "Keeps battlefield map focused on player arrow.", 15, -85, false)

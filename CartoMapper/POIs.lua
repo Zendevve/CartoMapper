@@ -7,6 +7,15 @@ local POIs = {}
 CartoMapper.modules["pois"] = POIs
 local DB = CartoMapper.DB
 
+-- Owned here rather than in Config.lua - see BattleMap.lua for the same fix and reasoning.
+POIs.defaults = {
+    ShowDungeonIcons = true,
+    ShowTravelPoints = true,
+    ShowTravelOpposing = false,
+    ShowSpiritHealers = true,
+    ShowZoneCrossings = true,
+}
+
 local POIData = {
     ["Alterac"] = {
         {"Spirit", 42.9, 38.0, "Spirit Healer", nil, "Spirit", nil, nil},

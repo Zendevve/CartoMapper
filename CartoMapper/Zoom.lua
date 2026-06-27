@@ -6,6 +6,14 @@ Also handles Ctrl + Scroll windowed map scaling and inverse scale correction for
 
 local Zoom = {}
 CartoMapper.modules["zoom"] = Zoom
+-- The scroll/zoom scaffolding (scroll frame, OnUpdate override, hooks) has to be
+-- installed once at startup regardless of the "zoom" DB option, because the option
+-- itself is checked live at each point of use (wheel, drag, remembered-zoom restore).
+Zoom.alwaysEnable = true
+-- liveToggle = true lets profile switches / Reset Defaults call Zoom.Enable()/Disable()
+-- immediately instead of just flagging "reload needed". Enable() is idempotent (guarded
+-- by Zoom.enabled) and Disable() resets any active zoom/pan state - see below.
+Zoom.liveToggle = true
 
 function CartoMapper.UpdateClickThrough()
     local state = not (WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapper.DB.GetOpt("clickThrough"))
@@ -238,8 +246,10 @@ local function SetupWorldMapFrame()
     WorldMapScrollFrame:SetHorizontalScroll(0)
     WorldMapScrollFrame:SetVerticalScroll(0)
 
-    -- Persist zoom across reopenings of the same zone
-    if CartoMapper.DB.GetOpt("rememberZoom") and GetCurrentMapZone() == PreviousState.zone then
+    -- Persist zoom across reopenings of the same zone (only while zoom is actually enabled -
+    -- otherwise a remembered zoomed-in state could silently reapply itself even after the
+    -- user turned scroll-to-zoom off).
+    if CartoMapper.DB.GetOpt("zoom") and CartoMapper.DB.GetOpt("rememberZoom") and GetCurrentMapZone() == PreviousState.zone then
         SetDetailFrameScale(PreviousState.scale)
         WorldMapScrollFrame:SetHorizontalScroll(PreviousState.panX)
         WorldMapScrollFrame:SetVerticalScroll(PreviousState.panY)
@@ -749,8 +759,25 @@ function Zoom.Enable()
         end
     end)
 
-    -- Setup custom OnUpdate for map mouse positioning and pin scaling
-    WorldMapButton:SetScript("OnUpdate", WorldMapButton_OnUpdate)
+    -- Setup custom OnUpdate for map mouse positioning and pin scaling.
+    -- Wrapped in pcall: this function runs every single frame the map is open, and since
+    -- it fully replaces Blizzard's own OnUpdate script (rather than hooking it), an
+    -- uncaught error here would silently disable map positioning/zoom for the rest of
+    -- the session instead of just printing a Lua error once. Error reports are throttled
+    -- to avoid spamming chat if the same error recurs every frame.
+    local lastOnUpdateErrorTime = 0
+    WorldMapButton:SetScript("OnUpdate", function(self, elapsed)
+        local ok, err = pcall(WorldMapButton_OnUpdate, self, elapsed)
+        if not ok then
+            local now = GetTime()
+            if now - lastOnUpdateErrorTime > 5 then
+                lastOnUpdateErrorTime = now
+                if CartoMapper.Print then
+                    CartoMapper.Print("|cffff0000Map update error (suppressing repeats for 5s):|r " .. tostring(err))
+                end
+            end
+        end
+    end)
 
     -- Setup on show
     local original_WorldMapFrame_OnShow = WorldMapFrame:GetScript("OnShow")
@@ -763,7 +790,11 @@ function Zoom.Enable()
 end
 
 function Zoom.Disable()
-    -- No-op since hooks are loaded on ADDON_LOADED and cannot be undone live
+    -- The hooks/scaffolding installed in Enable() can't be removed at runtime (WoW's
+    -- API gives no way to undo hooksecurefunc or a replaced OnUpdate script). What we
+    -- *can* do is immediately drop any active zoom/pan back to the unzoomed default, so
+    -- turning this off doesn't leave the map stuck zoomed in with no way back via the UI.
+    CartoMapper.UpdateZoom()
 end
 
 function CartoMapper.UpdateZoom()

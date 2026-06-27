@@ -8,6 +8,19 @@ local BattleMap = CreateFrame("Frame")
 CartoMapper.modules["battleMap"] = BattleMap
 BattleMap.liveToggle = true
 
+-- Owned here rather than in Config.lua so these get registered (and filled into the
+-- saved-variables file) during the normal DB.Initialize() pass like every other module's
+-- options, instead of being patched in late, after Initialize has already run.
+BattleMap.defaults = {
+    unlockBattlefield = false,
+    battleCenterOnPlayer = false,
+    battleGroupIconSize = 12,
+    battlePlayerArrowSize = 12,
+    battleMapSize = 300,
+    battleMapOpacity = 1.0,
+    battleMaxZoom = 2.0,
+}
+
 local DB = CartoMapper.DB
 
 local function ApplyBattleMapSettings()

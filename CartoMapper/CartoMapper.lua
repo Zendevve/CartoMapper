@@ -78,9 +78,15 @@ function CartoMapper:OnEvent(event, arg1)
         -- Initialize Database (migration + default filling)
         CartoMapper.DB.Initialize()
 
-        -- Enable all modules that are set to true
+        -- Enable all modules that are set to true.
+        -- Some modules (Zoom, ZoneInfo) install hooks/scaffolding that must always be
+        -- present even when their *user-facing* toggle is off, because the individual
+        -- features they expose are gated internally via DB.GetOpt at point of use rather
+        -- than by the module being enabled/disabled wholesale. Those modules opt in via
+        -- module.alwaysEnable instead of relying on a same-named DB option (which may not
+        -- exist, as was the case for ZoneInfo).
         for name, module in pairs(CartoMapper.modules) do
-            if CartoMapper.DB.GetOpt(name) == true or name == "zoom" then
+            if module.alwaysEnable or CartoMapper.DB.GetOpt(name) == true then
                 if module.Enable then
                     module.Enable()
                 end

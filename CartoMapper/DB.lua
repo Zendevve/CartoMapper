@@ -57,10 +57,16 @@ function DB.Initialize()
         end
     end
 
-    -- Migrate old default Blue/Emerald tint to Normal style if present
-    if CartoMapperDB.global.fogColorStyle == 0 and CartoMapperDB.global.fogR == 0.2 and CartoMapperDB.global.fogG == 0.6 and CartoMapperDB.global.fogB == 1.0 then
-        CartoMapperDB.global.fogColorStyle = 1
-        CartoMapperDB.global.fogTransparency = 0.7
+    -- Migrate old default Blue/Emerald tint to Normal style if present.
+    -- Gated by version so this only ever runs once, on the upgrade that introduced it,
+    -- rather than re-checking every login (which could also misfire if someone
+    -- deliberately picked these exact custom color values later).
+    local dbVersion = CartoMapperDB.v or 1
+    if dbVersion < 2 then
+        if CartoMapperDB.global.fogColorStyle == 0 and CartoMapperDB.global.fogR == 0.2 and CartoMapperDB.global.fogG == 0.6 and CartoMapperDB.global.fogB == 1.0 then
+            CartoMapperDB.global.fogColorStyle = 1
+            CartoMapperDB.global.fogTransparency = 0.7
+        end
     end
 
     CartoMapperDB.v = 2
