@@ -1,6 +1,8 @@
 *.py
 *.log
 .kilo/
-refs/
 .gemini/
 *.zip
+/refs/
+refs/
+refs

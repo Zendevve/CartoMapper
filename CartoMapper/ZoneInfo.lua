@@ -139,12 +139,12 @@ function ZoneInfo.Enable()
     ZoneInfo.enabled = true
     
     if not ZoneInfo.hookedPOI then
-        hooksecurefunc("WorldMapFrame_UpdateLandmarks", HideTownCityPOIs)
+        hooksecurefunc("WorldMapFrame_Update", HideTownCityPOIs)
         ZoneInfo.hookedPOI = true
     end
 
     if WorldMapFrame and WorldMapFrame:IsShown() then
-        WorldMapFrame_UpdateLandmarks()
+        WorldMapFrame_Update()
     end
 end
 
@@ -152,6 +152,6 @@ function ZoneInfo.Disable()
     ZoneInfo.enabled = false
     -- Refresh POI frame to show town/city landmarks again
     if WorldMapFrame and WorldMapFrame:IsShown() then
-        WorldMapFrame_UpdateLandmarks()
+        WorldMapFrame_Update()
     end
 end
