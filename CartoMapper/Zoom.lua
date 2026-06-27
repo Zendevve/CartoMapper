@@ -13,6 +13,17 @@ Zoom.defaults = {
     mapY = -118,
 }
 
+local orig_WorldMapFrame_SetPoint = WorldMapFrame.SetPoint
+function WorldMapFrame:SetPoint(point, relativeTo, relativePoint, x, y)
+    if WORLDMAP_SETTINGS and WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and (relativeTo == WorldMapScreenAnchor or relativeTo == "WorldMapScreenAnchor") then
+        local savedX = DB.GetOpt("mapX") or 10
+        local savedY = DB.GetOpt("mapY") or -118
+        orig_WorldMapFrame_SetPoint(self, "TOPLEFT", UIParent, "TOPLEFT", savedX, savedY)
+    else
+        orig_WorldMapFrame_SetPoint(self, point, relativeTo, relativePoint, x, y)
+    end
+end
+
 function CartoMapper.UpdateClickThrough()
     local state = not (WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapper.DB.GetOpt("clickThrough"))
     WorldMapFrame:EnableMouse(state)
