@@ -16,7 +16,15 @@ Zoom.alwaysEnable = true
 Zoom.liveToggle = true
 
 function CartoMapper.UpdateClickThrough()
-    local state = not (WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapper.DB.GetOpt("clickThrough"))
+    local clickThrough = CartoMapper.DB.GetOpt("clickThrough")
+    local state = true
+    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and clickThrough then
+        if IsAltKeyDown() then
+            state = true
+        else
+            state = false
+        end
+    end
     WorldMapFrame:EnableMouse(state)
     WorldMapScrollFrame:EnableMouse(state)
     WorldMapButton:EnableMouse(state)
@@ -862,6 +870,7 @@ function Zoom.Enable()
 
     -- Windowed map drag-to-move bindings
     WorldMapTitleButton:SetScript("OnDragStart", function()
+        if CartoMapper.DB.GetOpt("lockMap") then return end
         if WorldMapScreenAnchor then
             WorldMapScreenAnchor:ClearAllPoints()
         end
@@ -869,6 +878,7 @@ function Zoom.Enable()
         WorldMapFrame:StartMoving()
     end)
     WorldMapTitleButton:SetScript("OnDragStop", function()
+        if CartoMapper.DB.GetOpt("lockMap") then return end
         WorldMapFrame:StopMovingOrSizing()
         if WorldMapScreenAnchor then
             WorldMapScreenAnchor:StartMoving()
@@ -904,6 +914,15 @@ function Zoom.Enable()
             original_WorldMapFrame_OnShow(self)
         end
         SetupWorldMapFrame()
+    end)
+
+    -- Setup modifier listener for temporary click-through bypass (Alt key)
+    local modifierFrame = _G["CartoMapperModifierFrame"] or CreateFrame("Frame", "CartoMapperModifierFrame")
+    modifierFrame:RegisterEvent("MODIFIER_STATE_CHANGED")
+    modifierFrame:SetScript("OnEvent", function(self, event, key, state)
+        if key == "LALT" or key == "RALT" then
+            CartoMapper.UpdateClickThrough()
+        end
     end)
 end
 

@@ -313,9 +313,10 @@ function CartoMapper.CreateConfigFrame()
     -- Tab 2: Map Window
     local panelWin = tabPanels[2]
     CreateCheckbox(panelWin, "Borderless Windowed Map", "borderless", "Hides borders and bulky backdrop frames from the windowed map.", 15, -15, true)
-    CreateCheckbox(panelWin, "Click-Through Map", "clickThrough", "Makes windowed map click-through (allows moving/acting through map).", 15, -45, false)
+    CreateCheckbox(panelWin, "Click-Through Map", "clickThrough", "Makes windowed map click-through. Hold Alt key to temporarily interact with the map.", 15, -45, false)
     CreateCheckbox(panelWin, "No Fade On Cursor Hover", "NoFadeCursor", "Suspends movement fading when hovering your cursor over the map.", 15, -75, false)
     CreateCheckbox(panelWin, "Hide Town & City Icons", "hideTownCityIcons", "Hides default Blizzard city/town icons on the continent maps.", 15, -105, true)
+    CreateCheckbox(panelWin, "Lock Map Position", "lockMap", "Prevents dragging and moving the windowed map frame.", 15, -135, false)
     
     CreateSlider(panelWin, "Map Window Scale", "mapScale", 0.5, 4.0, 0.05, "%.2f", "Adjusts the overall scale/size of the windowed map frame. Also adjustable via Ctrl + Scroll on the map itself.", 15, -165, false)
     CreateSlider(panelWin, "Stationary Opacity", "stationaryOpacity", 0.1, 1.0, 0.05, "%.2f", "Opacity of the windowed map when standing still.", 15, -225, false)
