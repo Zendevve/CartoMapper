@@ -209,8 +209,9 @@ end
 
 local function updatePointRelativeTo(frame, newRelativeFrame)
     if not frame then return end
-    local currentPoint, _currentRelativeFrame, currentRelativePoint, currentOffsetX, currentOffsetY = frame:GetPoint()
+    local currentPoint, currentRelativeFrame, currentRelativePoint, currentOffsetX, currentOffsetY = frame:GetPoint()
     if currentPoint and currentRelativePoint then
+        if currentRelativeFrame == newRelativeFrame then return end
         frame:ClearAllPoints()
         frame:SetPoint(currentPoint, newRelativeFrame, currentRelativePoint, currentOffsetX, currentOffsetY)
     end
@@ -298,9 +299,11 @@ local function SetupWorldMapFrame()
     WorldMapScrollFrame:SetScale(WORLDMAP_SETTINGS.size)
     
     -- Correct scroll child dimensions and remove parent constraints to prevent layout conflicts
-    WorldMapDetailFrame:ClearAllPoints()
-    WorldMapScrollFrame:SetScrollChild(WorldMapDetailFrame)
-    WorldMapDetailFrame:SetSize(1002, 668)
+    if WorldMapScrollFrame:GetScrollChild() ~= WorldMapDetailFrame then
+        WorldMapDetailFrame:ClearAllPoints()
+        WorldMapScrollFrame:SetScrollChild(WorldMapDetailFrame)
+        WorldMapDetailFrame:SetSize(1002, 668)
+    end
 
     -- Defer scale and scroll updates to the next frame to allow the engine layout to process.
     -- This resolves the "blank/invisible map" issue on reopening the map frame.
@@ -331,14 +334,23 @@ local function SetupWorldMapFrame()
         end
     end)
 
-    WorldMapButton:SetScale(1.0)
-    WorldMapButton:SetAllPoints(WorldMapDetailFrame)
-    WorldMapButton:SetParent(WorldMapDetailFrame)
-    WorldMapPOIFrame:SetParent(WorldMapDetailFrame)
-    WorldMapBlobFrame:SetParent(WorldMapDetailFrame)
-    WorldMapBlobFrame:ClearAllPoints()
-    WorldMapBlobFrame:SetAllPoints(WorldMapDetailFrame)
-    WorldMapPlayer:SetParent(WorldMapDetailFrame)
+    if WorldMapButton:GetParent() ~= WorldMapDetailFrame then
+        WorldMapButton:SetParent(WorldMapDetailFrame)
+        WorldMapButton:SetScale(1.0)
+        WorldMapButton:ClearAllPoints()
+        WorldMapButton:SetAllPoints(WorldMapDetailFrame)
+    end
+    if WorldMapPOIFrame:GetParent() ~= WorldMapDetailFrame then
+        WorldMapPOIFrame:SetParent(WorldMapDetailFrame)
+    end
+    if WorldMapBlobFrame:GetParent() ~= WorldMapDetailFrame then
+        WorldMapBlobFrame:SetParent(WorldMapDetailFrame)
+        WorldMapBlobFrame:ClearAllPoints()
+        WorldMapBlobFrame:SetAllPoints(WorldMapDetailFrame)
+    end
+    if WorldMapPlayer:GetParent() ~= WorldMapDetailFrame then
+        WorldMapPlayer:SetParent(WorldMapDetailFrame)
+    end
 
     -- Anchor Quest Log sub-elements to the scroll frame instead of the scaled detail frame
     updatePointRelativeTo(WorldMapQuestScrollFrame, WorldMapScrollFrame)
