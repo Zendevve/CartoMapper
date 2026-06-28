@@ -152,7 +152,12 @@ function Waypoints.GetPinFrame(index)
         pin:SetScript("OnClick", function(self, button)
             if button == "RightButton" then
                 WorldMapTooltip:Hide()
-                Waypoints.Remove(self.wp)
+                local wp = self.wp
+                local f = CreateFrame("Frame")
+                f:SetScript("OnUpdate", function(self)
+                    self:SetScript("OnUpdate", nil)
+                    Waypoints.Remove(wp)
+                end)
             elseif button == "LeftButton" then
                 WorldMapTooltip:Hide()
                 Waypoints.SetActive(self.wp)
@@ -424,6 +429,8 @@ function Waypoints.Add(wp)
 end
 
 function Waypoints.Remove(wp)
+    local wasActive = wp.active
+    
     local index = nil
     for i, w in ipairs(activeWaypoints) do
         if w.id == wp.id then
@@ -439,8 +446,7 @@ function Waypoints.Remove(wp)
     CartoMapper.DB.SetOpt("waypointsList", activeWaypoints)
     
     -- If active waypoint was removed, switch arrow target
-    local activeWp = Waypoints.GetActive()
-    if activeWp and activeWp.id == wp.id then
+    if wasActive then
         if #activeWaypoints > 0 then
             Waypoints.SetActive(activeWaypoints[#activeWaypoints])
         else
