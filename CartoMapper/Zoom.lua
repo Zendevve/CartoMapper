@@ -405,14 +405,24 @@ local function WorldMapButton_OnMouseUp(self, button)
     end
     WorldMapScrollFrame.panning = false
     if not WorldMapScrollFrame.moved then
-        -- Default zoom click (subzone/continent click)
-        WorldMapButton_OnClick(WorldMapButton, button)
-        -- Reset scale when changing zones
-        SetDetailFrameScale(MIN_ZOOM)
-        WorldMapScrollFrame:SetHorizontalScroll(0)
-        WorldMapScrollFrame:SetVerticalScroll(0)
-        AfterScrollOrPan()
-        WorldMapScrollFrame.zoomedIn = false
+        if button == "RightButton" and WorldMapScrollFrame.zoomedIn then
+            -- Reset zoom on the current zone instead of zooming out of the zone
+            SetDetailFrameScale(MIN_ZOOM)
+            WorldMapScrollFrame:SetHorizontalScroll(0)
+            WorldMapScrollFrame:SetVerticalScroll(0)
+            AfterScrollOrPan()
+            WorldMapScrollFrame.zoomedIn = false
+            WorldMapScrollFrame.manuallyPanned = false
+        else
+            -- Default zoom click (subzone/continent click or standard right click zoom out)
+            WorldMapButton_OnClick(WorldMapButton, button)
+            -- Reset scale when changing zones
+            SetDetailFrameScale(MIN_ZOOM)
+            WorldMapScrollFrame:SetHorizontalScroll(0)
+            WorldMapScrollFrame:SetVerticalScroll(0)
+            AfterScrollOrPan()
+            WorldMapScrollFrame.zoomedIn = false
+        end
     else
         WorldMapScrollFrame.manuallyPanned = true
     end
