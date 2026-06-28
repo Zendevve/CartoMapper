@@ -62,6 +62,7 @@ local function UpdatePosition()
     else
         display:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", 0, 10)
     end
+    display:SetFrameLevel((WorldMapFrame:GetFrameLevel() or 1) + 15)
 
     cursortext:ClearAllPoints()
     cursortext:SetPoint("LEFT", display, "CENTER", 10, 0)
@@ -72,12 +73,18 @@ end
 function Coords.Enable()
     if Coords.enabled then 
         local frame = _G["CartoMapper_CoordsFrame"]
-        if frame then frame:Show() end
+        if frame then 
+            frame:Show() 
+            frame:SetFrameLevel((WorldMapFrame:GetFrameLevel() or 1) + 15)
+        end
         return 
     end
     Coords.enabled = true
 
     local display = _G["CartoMapper_CoordsFrame"] or CreateFrame("Frame", "CartoMapper_CoordsFrame", WorldMapFrame)
+    display:SetSize(400, 20)
+    display:SetFrameLevel((WorldMapFrame:GetFrameLevel() or 1) + 15)
+
     if not cursortext then
         cursortext = display:CreateFontString(nil, "ARTWORK", "GameFontNormal")
         playertext = display:CreateFontString(nil, "ARTWORK", "GameFontNormal")
