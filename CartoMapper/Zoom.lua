@@ -457,6 +457,7 @@ end
 
 -- Click and Drag Panning
 local function WorldMapButton_OnMouseDown(self, button)
+    if IsControlKeyDown() then return end
     if not CartoMapper.DB.GetOpt("zoom") then return end
     
     -- Sync zoomedIn state with actual detail frame scale to prevent any event order/timing issues
@@ -477,6 +478,7 @@ end
 
 local function WorldMapButton_OnMouseUp(self, button)
     if IsControlKeyDown() and button == "LeftButton" then
+        WorldMapScrollFrame.panning = false
         local cursorX, cursorY = GetCursorPosition()
         local scale = WorldMapDetailFrame:GetEffectiveScale()
         local left = WorldMapDetailFrame:GetLeft()

@@ -121,6 +121,7 @@ function Waypoints.GetPinFrame(index)
         local pin = CreateFrame("Button", "CartoMapper_WaypointPin" .. index, WorldMapDetailFrame)
         pin:SetSize(18, 18)
         pin:SetFrameLevel(WorldMapDetailFrame:GetFrameLevel() + 20)
+        pin:RegisterForClicks("AnyUp")
         
         local tex = pin:CreateTexture(nil, "OVERLAY")
         tex:SetTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up") -- Red Cross
@@ -148,7 +149,7 @@ function Waypoints.GetPinFrame(index)
             WorldMapTooltip:Hide()
         end)
         
-        pin:SetScript("OnMouseDown", function(self, button)
+        pin:SetScript("OnClick", function(self, button)
             if button == "RightButton" then
                 WorldMapTooltip:Hide()
                 Waypoints.Remove(self.wp)
