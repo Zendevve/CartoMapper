@@ -24,6 +24,8 @@ local coreDefaults = {
     zoneLevels = true,
     rememberZoom = true,
     zoomStep = 0.1,
+    autoChangeZones = false,
+    instanceMaps = true,
     -- Fog clear settings
     fogColorStyle = 1,     -- 0: Blue/Emerald, 1: Normal, 2: Custom
     fogTransparency = 0.7, -- Unexplored area opacity

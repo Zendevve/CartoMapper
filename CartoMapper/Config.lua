@@ -305,6 +305,8 @@ function CartoMapper.CreateConfigFrame()
     CreateCheckbox(panelGen, "Minimap Button", "minimapButton", "Show the circular minimap shortcut button.", 15, -15, false)
     CreateCheckbox(panelGen, "Remember Zoom Level", "rememberZoom", "Maintains zoom level and map offsets when closing/reopening the map.", 15, -45, false)
     CreateCheckbox(panelGen, "Show Zone & Fishing Levels", "zoneLevels", "Shows recommended levels and fishing skill required on map Continent tooltips.", 15, -75, false)
+    CreateCheckbox(panelGen, "Auto-Change Zone on Move", "autoChangeZones", "Automatically updates the map to your current zone when moving.", 15, -105, false)
+    CreateCheckbox(panelGen, "Browse Instance Maps", "instanceMaps", "Allows viewing instance and battleground maps from the world map continent/zone menus.", 15, -135, true)
 
     -- Tab 2: Map Window
     local panelWin = tabPanels[2]

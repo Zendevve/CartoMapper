@@ -469,8 +469,8 @@ local function WorldMapButton_OnUpdate(self, elapsed)
         WorldMapScrollFrame_OnPan(x, y)
     end
 
-    -- Auto-center on player if followPlayer is enabled, map is zoomed in, and we haven't manually panned
-    if CartoMapper.DB.GetOpt("followPlayer") and WorldMapScrollFrame.zoomedIn and not WorldMapScrollFrame.manuallyPanned and not WorldMapScrollFrame.panning then
+    -- Auto-center on player if followPlayer is enabled, map is zoomed in, we haven't manually panned, and Shift is not held down
+    if CartoMapper.DB.GetOpt("followPlayer") and WorldMapScrollFrame.zoomedIn and not WorldMapScrollFrame.manuallyPanned and not WorldMapScrollFrame.panning and not IsShiftKeyDown() then
         local playerX, playerY = GetPlayerMapPosition("player")
         if playerX > 0 and playerY > 0 then
             local scale = WorldMapDetailFrame:GetScale()
