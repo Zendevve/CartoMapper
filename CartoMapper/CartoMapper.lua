@@ -24,6 +24,7 @@ local coreDefaults = {
     zoneLevels = true,
     rememberZoom = true,
     zoomStep = 0.1,
+    maxZoom = 10.0,
     autoChangeZones = false,
     instanceMaps = true,
     coordsAccuracy = 1,
