@@ -317,6 +317,15 @@ local function SetupWorldMapFrame()
         WorldMapFrameSizeDownButton:Hide()
     end
 
+    local resizeHandle = _G["CartoMapperResizeHandle"]
+    if resizeHandle then
+        if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
+            resizeHandle:Show()
+        else
+            resizeHandle:Hide()
+        end
+    end
+
     -- Update detail tiles visibility for landmass borderless mask
     UpdateDetailTilesVisibility()
 end
@@ -738,6 +747,67 @@ function Zoom.Enable()
         WorldMapScrollFrame = CreateFrame("ScrollFrame", "WorldMapScrollFrame", WorldMapFrame, "FauxScrollFrameTemplate")
         WorldMapScrollFrame:SetSize(1002, 668)
         WorldMapScrollFrame:SetPoint("TOPLEFT", WorldMapPositioningGuide, "TOPLEFT")
+    end
+
+    -- Create resize handle
+    if not _G["CartoMapperResizeHandle"] then
+        local resizeHandle = CreateFrame("Button", "CartoMapperResizeHandle", WorldMapFrame)
+        resizeHandle:SetSize(16, 16)
+        resizeHandle:SetPoint("BOTTOMRIGHT", WorldMapScrollFrame, "BOTTOMRIGHT", 1, -1)
+        resizeHandle:SetFrameLevel(WorldMapScrollFrame:GetFrameLevel() + 5)
+
+        local normalTex = resizeHandle:CreateTexture(nil, "OVERLAY")
+        normalTex:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+        normalTex:SetAllPoints(resizeHandle)
+        resizeHandle:SetNormalTexture(normalTex)
+
+        local highlightTex = resizeHandle:CreateTexture(nil, "OVERLAY")
+        highlightTex:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+        highlightTex:SetAllPoints(resizeHandle)
+        resizeHandle:SetHighlightTexture(highlightTex)
+
+        local dragStartScale, dragStartDist
+        resizeHandle:SetScript("OnMouseDown", function(self, button)
+            if button == "LeftButton" then
+                local left = WorldMapFrame:GetLeft()
+                if not left then return end
+                
+                local cx = GetCursorPosition()
+                local uiScale = UIParent:GetEffectiveScale()
+                cx = cx / uiScale
+                
+                dragStartScale = WorldMapFrame:GetScale() or 1.0
+                dragStartDist = cx - left
+                
+                if dragStartDist > 50 then
+                    self:SetScript("OnUpdate", function()
+                        local curCx = GetCursorPosition()
+                        curCx = curCx / uiScale
+                        local curDist = curCx - left
+                        local newScale = (curDist / dragStartDist) * dragStartScale
+                        
+                        -- Clamp scale
+                        newScale = math.max(0.5, newScale)
+                        newScale = math.min(4.0, newScale)
+                        
+                        WorldMapFrame:SetScale(newScale)
+                        CartoMapper.DB.SetOpt("mapScale", newScale)
+                        
+                        if CartoMapperConfigFrame and CartoMapperConfigFrame:IsShown() then
+                            CartoMapperConfigFrame:UpdateAllValues()
+                        end
+                    end)
+                end
+            end
+        end)
+
+        resizeHandle:SetScript("OnMouseUp", function(self)
+            self:SetScript("OnUpdate", nil)
+        end)
+
+        resizeHandle:SetScript("OnHide", function(self)
+            self:SetScript("OnUpdate", nil)
+        end)
     end
 
     -- Set nesting structures
