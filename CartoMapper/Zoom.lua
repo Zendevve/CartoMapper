@@ -116,6 +116,9 @@ end
 
 local function SetDetailFrameScale(scale)
     WorldMapDetailFrame:SetScale(scale)
+    if WorldMapScrollFrame then
+        WorldMapScrollFrame:UpdateScrollChildRect()
+    end
     SetPOIMaxBounds()
 
     -- Correct scaling on map sub-elements so they do not bloat when zoomed in
@@ -304,17 +307,23 @@ local function SetupWorldMapFrame()
     deferFrame:SetScript("OnUpdate", function(self)
         self:SetScript("OnUpdate", nil)
         if WorldMapFrame:IsShown() then
+            local targetScale = 1.0
             if CartoMapper.DB.GetOpt("zoom") and CartoMapper.DB.GetOpt("rememberZoom") and GetCurrentMapZone() == PreviousState.zone then
-                SetDetailFrameScale(PreviousState.scale)
+                targetScale = PreviousState.scale
+                SetDetailFrameScale(targetScale)
                 WorldMapScrollFrame:SetHorizontalScroll(PreviousState.panX)
                 WorldMapScrollFrame:SetVerticalScroll(PreviousState.panY)
-                WorldMapScrollFrame.zoomedIn = PreviousState.scale > MIN_ZOOM
+                WorldMapScrollFrame.zoomedIn = targetScale > MIN_ZOOM
             else
                 SetDetailFrameScale(1.0)
                 WorldMapScrollFrame:SetHorizontalScroll(0)
                 WorldMapScrollFrame:SetVerticalScroll(0)
                 WorldMapScrollFrame.zoomedIn = false
             end
+            
+            WorldMapScrollFrame.maxX = ((WorldMapDetailFrame:GetWidth() * targetScale) - WorldMapScrollFrame:GetWidth()) / targetScale
+            WorldMapScrollFrame.maxY = ((WorldMapDetailFrame:GetHeight() * targetScale) - WorldMapScrollFrame:GetHeight()) / targetScale
+
             AfterScrollOrPan()
             if WorldMapFrame_Update then
                 WorldMapFrame_Update()
