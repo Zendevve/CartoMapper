@@ -157,14 +157,28 @@ function ZoneInfo.Disable()
 end
 
 -- Auto-Change Zone on Move handler
+local delayFrame = CreateFrame("Frame")
+delayFrame:Hide()
+local elapsed = 0
+delayFrame:SetScript("OnUpdate", function(self, el)
+    elapsed = elapsed + el
+    if elapsed >= 0.2 then
+        self:Hide()
+        if CartoMapper.DB.GetOpt("autoChangeZones") then
+            if WorldMapFrame and WorldMapFrame:IsShown() then
+                SetMapToCurrentZone()
+            end
+        end
+    end
+end)
+
 local zoneChangeFrame = CreateFrame("Frame")
 zoneChangeFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 zoneChangeFrame:RegisterEvent("ZONE_CHANGED")
 zoneChangeFrame:RegisterEvent("ZONE_CHANGED_INDOORS")
 zoneChangeFrame:SetScript("OnEvent", function()
     if CartoMapper.DB.GetOpt("autoChangeZones") then
-        if WorldMapFrame and WorldMapFrame:IsShown() then
-            SetMapToCurrentZone()
-        end
+        elapsed = 0
+        delayFrame:Show()
     end
 end)
