@@ -16,3 +16,4 @@ Zoom.lua
 POIs.lua
 InstanceMaps.lua
 Config.lua
+Bindings.xml

@@ -26,6 +26,7 @@ local coreDefaults = {
     zoomStep = 0.1,
     autoChangeZones = false,
     instanceMaps = true,
+    coordsAccuracy = 1,
     -- Fog clear settings
     fogColorStyle = 1,     -- 0: Blue/Emerald, 1: Normal, 2: Custom
     fogTransparency = 0.7, -- Unexplored area opacity
@@ -41,6 +42,11 @@ local coreDefaults = {
     playerArrowSize = 16,
     groupIconSize = 16,
 }
+
+-- Bindings localization
+_G["BINDING_HEADER_CARTOMAPPER"] = "CartoMapper"
+_G["BINDING_NAME_CARTOMAPPER_TOGGLE_CONFIG"] = "Toggle Options Panel"
+
 
 local function Print(msg)
     DEFAULT_CHAT_FRAME:AddMessage("|cff00ffb0[CartoMapper]|r: " .. msg)

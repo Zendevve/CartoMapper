@@ -35,15 +35,17 @@ end
 local function OnUpdate(self, elapsed)
     local cx, cy = MouseXY()
     local px, py = GetPlayerMapPosition("player")
+    local acc = CartoMapper.DB.GetOpt("coordsAccuracy") or 1
+    local template = "%s: %." .. acc .. "f, %." .. acc .. "f"
 
     if cx then
-        cursortext:SetFormattedText(texttemplate, "Cursor", cx * 100, cy * 100)
+        cursortext:SetFormattedText(template, "Cursor", cx * 100, cy * 100)
     else
         cursortext:SetText("")
     end
 
     if px and px > 0 and py and py > 0 then
-        playertext:SetFormattedText(texttemplate, "Player", px * 100, py * 100)
+        playertext:SetFormattedText(template, "Player", px * 100, py * 100)
     else
         playertext:SetText("")
     end

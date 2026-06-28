@@ -1,0 +1,12 @@
+<Bindings>
+	<Binding name="CARTOMAPPER_TOGGLE_CONFIG" header="CARTOMAPPER">
+		if CartoMapperConfigFrame then
+			if CartoMapperConfigFrame:IsShown() then
+				CartoMapperConfigFrame:Hide()
+			else
+				CartoMapperConfigFrame:Show()
+				CartoMapperConfigFrame:UpdateAllValues()
+			end
+		end
+	</Binding>
+</Bindings>

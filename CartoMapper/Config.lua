@@ -307,6 +307,8 @@ function CartoMapper.CreateConfigFrame()
     CreateCheckbox(panelGen, "Show Zone & Fishing Levels", "zoneLevels", "Shows recommended levels and fishing skill required on map Continent tooltips.", 15, -75, false)
     CreateCheckbox(panelGen, "Auto-Change Zone on Move", "autoChangeZones", "Automatically updates the map to your current zone when moving.", 15, -105, false)
     CreateCheckbox(panelGen, "Browse Instance Maps", "instanceMaps", "Allows viewing instance and battleground maps from the world map continent/zone menus.", 15, -135, true)
+    CreateCheckbox(panelGen, "Show Coordinates", "coords", "Show cursor and player coordinates at the bottom of the map.", 15, -165, false)
+    CreateSlider(panelGen, "Coordinates Accuracy", "coordsAccuracy", 0, 2, 1, "%.0f", "Sets the number of decimal places for map coordinates.", 15, -225, false)
 
     -- Tab 2: Map Window
     local panelWin = tabPanels[2]
