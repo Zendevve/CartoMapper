@@ -313,6 +313,18 @@ function CartoMapper.CreateConfigFrame()
     CreateCheckbox(panelGen, "Show Coordinates", "coords", "Show cursor and player coordinates at the bottom of the map.", 15, -165, false)
     CreateSlider(panelGen, "Coordinates Accuracy", "coordsAccuracy", 0, 2, 1, "%.0f", "Sets the number of decimal places for map coordinates.", 15, -225, false)
 
+    CreateCheckbox(panelGen, "Enable Waypoints System", "waypoints", "Enables Ctrl+Left Click to set waypoints and displays an on-screen navigation arrow.", 15, -285, false)
+
+    local clearWpBtn = CreateFrame("Button", "CartoMapperClearWaypointsButton", panelGen, "UIPanelButtonTemplate")
+    clearWpBtn:SetSize(160, 22)
+    clearWpBtn:SetPoint("TOPLEFT", panelGen, "TOPLEFT", 15, -335)
+    clearWpBtn:SetText("Clear All Waypoints")
+    clearWpBtn:SetScript("OnClick", function()
+        if CartoMapper.modules["waypoints"] and CartoMapper.modules["waypoints"].ClearAll then
+            CartoMapper.modules["waypoints"].ClearAll()
+        end
+    end)
+
     -- Tab 2: Map Window
     local panelWin = tabPanels[2]
     CreateCheckbox(panelWin, "Borderless Windowed Map", "borderless", "Hides borders and bulky backdrop frames from the windowed map.", 15, -15, true)

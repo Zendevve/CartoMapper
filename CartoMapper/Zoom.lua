@@ -476,6 +476,23 @@ local function WorldMapButton_OnMouseDown(self, button)
 end
 
 local function WorldMapButton_OnMouseUp(self, button)
+    if IsControlKeyDown() and button == "LeftButton" then
+        local cursorX, cursorY = GetCursorPosition()
+        local scale = WorldMapDetailFrame:GetEffectiveScale()
+        local left = WorldMapDetailFrame:GetLeft()
+        local top = WorldMapDetailFrame:GetTop()
+        local width = WorldMapDetailFrame:GetWidth()
+        local height = WorldMapDetailFrame:GetHeight()
+        if scale and left and top and width and height then
+            local x = (cursorX / scale - left) / width
+            local y = (top - cursorY / scale) / height
+            if CartoMapper.AddWaypointAt then
+                CartoMapper.AddWaypointAt(x * 100, y * 100)
+            end
+        end
+        return
+    end
+
     if not CartoMapper.DB.GetOpt("zoom") then
         WorldMapButton_OnClick(WorldMapButton, button)
         return

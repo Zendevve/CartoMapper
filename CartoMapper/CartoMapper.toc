@@ -9,6 +9,7 @@ DB.lua
 CartoMapper.lua
 ZoneInfo.lua
 Coords.lua
+Waypoints.lua
 BattleMap.lua
 GroupIcons.lua
 FogClear.lua
