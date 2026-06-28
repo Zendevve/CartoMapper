@@ -86,7 +86,14 @@ end
 
 local function UpdateDetailTilesVisibility()
     local numTiles = NUM_WORLDMAP_DETAIL_TILES or 12
-    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapper.DB.GetOpt("borderless") and GetCurrentMapZone() > 0 and (GetNumMapOverlays() > 0 or CartoMapper.DB.GetOpt("fogClear")) then
+    local hasOverlays = false
+    if CartoMapper.modules["fogClear"] and CartoMapper.modules["fogClear"].enabled and CartoMapper.modules["fogClear"].HasOverlays then
+        hasOverlays = CartoMapper.modules["fogClear"].HasOverlays()
+    else
+        hasOverlays = GetNumMapOverlays() > 0
+    end
+
+    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapper.DB.GetOpt("borderless") and GetCurrentMapZone() > 0 and hasOverlays then
         for i = 1, numTiles do
             local tile = _G["WorldMapDetailTile" .. i]
             if tile then tile:Hide() end

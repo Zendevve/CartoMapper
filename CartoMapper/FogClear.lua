@@ -1282,3 +1282,14 @@ function FogClear.Disable()
         WorldMapFrame_Update()
     end
 end
+
+function FogClear.HasOverlays()
+    if not FogClear.enabled then return false end
+    local mapFileName = GetMapInfo()
+    if not mapFileName then return false end
+    local overlayMap = errata[mapFileName]
+    if overlayMap and next(overlayMap) then
+        return true
+    end
+    return false
+end
