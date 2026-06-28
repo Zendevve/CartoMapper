@@ -53,17 +53,20 @@ end
 
 local function UpdatePosition()
     if not cursortext or not playertext then return end
+    local display = _G["CartoMapper_CoordsFrame"]
+    if not display then return end
+
+    display:ClearAllPoints()
     if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
-        cursortext:ClearAllPoints()
-        cursortext:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOM", 15, -2)
-        playertext:ClearAllPoints()
-        playertext:SetPoint("BOTTOMRIGHT", WorldMapPositioningGuide, "BOTTOM", -30, -2)
+        display:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", 0, -2)
     else
-        cursortext:ClearAllPoints()
-        cursortext:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOM", 50, 10)
-        playertext:ClearAllPoints()
-        playertext:SetPoint("BOTTOMRIGHT", WorldMapPositioningGuide, "BOTTOM", -50, 10)
+        display:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", 0, 10)
     end
+
+    cursortext:ClearAllPoints()
+    cursortext:SetPoint("LEFT", display, "CENTER", 10, 0)
+    playertext:ClearAllPoints()
+    playertext:SetPoint("RIGHT", display, "CENTER", -10, 0)
 end
 
 function Coords.Enable()

@@ -223,15 +223,15 @@ function CartoMapper.UpdateElementScales()
     
     local fogToggle = _G["CartoMapperFogToggle"]
     if fogToggle then
-        fogToggle:SetScale(invScale)
+        fogToggle:SetScale(1.0)
     end
     
     if WorldMapTrackQuest then
-        WorldMapTrackQuest:SetScale(invScale)
+        WorldMapTrackQuest:SetScale(1.0)
     end
     
     if WorldMapQuestShowObjectives then
-        WorldMapQuestShowObjectives:SetScale(invScale)
+        WorldMapQuestShowObjectives:SetScale(1.0)
     end
     
     if WorldMapTooltip then
@@ -961,11 +961,12 @@ function Zoom.Enable()
         end
     end)
 
-    -- Hook tooltip OnShow to scale it inversely to map scale
+    -- Hook tooltip OnShow to scale it inversely to map scale and force it on top
     if WorldMapTooltip and not Zoom.hookedTooltip then
         WorldMapTooltip:HookScript("OnShow", function(self)
             local scale = WorldMapFrame:GetScale() or 1.0
             self:SetScale(1 / scale)
+            self:SetFrameStrata("TOOLTIP")
         end)
         Zoom.hookedTooltip = true
     end
