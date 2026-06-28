@@ -127,7 +127,7 @@ end
 function Waypoints.GetPinFrame(index)
     if not pinPool[index] then
         local pin = CreateFrame("Button", "CartoMapper_WaypointPin" .. index, WorldMapDetailFrame)
-        pin:SetSize(18, 18)
+        pin:SetSize(26, 26)
         pin:SetFrameLevel(WorldMapDetailFrame:GetFrameLevel() + 20)
         pin:RegisterForClicks("AnyUp")
         

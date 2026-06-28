@@ -560,7 +560,7 @@ local function AcquirePin()
     local pin = tremove(pinPool)
     if not pin then
         pin = CreateFrame("Button", nil, WorldMapDetailFrame)
-        pin:SetSize(16, 16)
+        pin:SetSize(24, 24)
         local tex = pin:CreateTexture(nil, "ARTWORK")
         tex:SetAllPoints()
         pin.texture = tex
