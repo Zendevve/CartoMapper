@@ -655,13 +655,15 @@ local function DrawPins()
         if isVisible then
             local pin = AcquirePin()
             
-            -- Inverse scale with map zoom so pins stay readable
-            pin:SetScale(1 / scale)
-            
             -- Set position relative to WorldMapDetailFrame
             local x = (px / 100) * w
             local y = -(py / 100) * h
-            pin:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", x, y)
+            pin.origX = x
+            pin.origY = y
+            
+            pin:SetScale(1 / scale)
+            pin:ClearAllPoints()
+            pin:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", x * scale, y * scale)
 
             -- Texture
             pin.texture:SetTexture(Textures[pinType] or "Interface\\Minimap\\MiniMap-QuestGiver")
@@ -687,9 +689,13 @@ end
 
 -- Refresh pin scaling on zoom updates
 local function UpdatePinScaling()
-    local scale = WorldMapDetailFrame:GetScale()
+    local scale = WorldMapDetailFrame:GetScale() or 1.0
     for _, pin in ipairs(activePins) do
-        pin:SetScale(1 / scale)
+        if pin.origX and pin.origY then
+            pin:SetScale(1 / scale)
+            pin:ClearAllPoints()
+            pin:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", pin.origX * scale, pin.origY * scale)
+        end
     end
 end
 

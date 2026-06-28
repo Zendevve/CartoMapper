@@ -69,8 +69,10 @@ local function UpdatePinScales()
     end
     local pinScale = 1 / (detailScale * scrollScale)
     for _, pin in ipairs(pinPool) do
-        if pin:IsShown() then
+        if pin:IsShown() and pin.origX and pin.origY then
             pin:SetScale(pinScale)
+            pin:ClearAllPoints()
+            pin:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", pin.origX * detailScale, pin.origY * detailScale)
         end
     end
 end
@@ -98,14 +100,20 @@ function Waypoints.UpdateMapPins()
     local pinIndex = 1
     local w = WorldMapDetailFrame:GetWidth()
     local h = WorldMapDetailFrame:GetHeight()
+    local detailScale = WorldMapDetailFrame:GetScale() or 1.0
     
     for _, wp in ipairs(activeWaypoints) do
         if wp.zone == zName then
             local pin = Waypoints.GetPinFrame(pinIndex)
             pin.wp = wp
             
+            local x = (wp.x / 100) * w
+            local y = -(wp.y / 100) * h
+            pin.origX = x
+            pin.origY = y
+            
             pin:ClearAllPoints()
-            pin:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", (wp.x / 100) * w, -(wp.y / 100) * h)
+            pin:SetPoint("CENTER", WorldMapDetailFrame, "TOPLEFT", x * detailScale, y * detailScale)
             pin:Show()
             
             pinIndex = pinIndex + 1
