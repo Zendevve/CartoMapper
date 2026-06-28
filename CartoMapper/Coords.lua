@@ -7,8 +7,7 @@ local Coords = {}
 CartoMapper.modules["coords"] = Coords
 Coords.liveToggle = true
 
-local cursortext, playertext
-local texttemplate = "%s: %.1f, %.1f"
+local coordstext
 
 local function MouseXY()
     local left, top = WorldMapDetailFrame:GetLeft(), WorldMapDetailFrame:GetTop()
@@ -36,23 +35,28 @@ local function OnUpdate(self, elapsed)
     local cx, cy = MouseXY()
     local px, py = GetPlayerMapPosition("player")
     local acc = CartoMapper.DB.GetOpt("coordsAccuracy") or 1
-    local template = "%s: %." .. acc .. "f, %." .. acc .. "f"
 
+    local pStr, cStr
+    if px and px > 0 and py and py > 0 then
+        pStr = string.format("P: %." .. acc .. "f, %." .. acc .. "f", px * 100, py * 100)
+    end
     if cx then
-        cursortext:SetFormattedText(template, "Cursor", cx * 100, cy * 100)
-    else
-        cursortext:SetText("")
+        cStr = string.format("C: %." .. acc .. "f, %." .. acc .. "f", cx * 100, cy * 100)
     end
 
-    if px and px > 0 and py and py > 0 then
-        playertext:SetFormattedText(template, "Player", px * 100, py * 100)
+    if pStr and cStr then
+        coordstext:SetText(pStr .. "   " .. cStr)
+    elseif pStr then
+        coordstext:SetText(pStr)
+    elseif cStr then
+        coordstext:SetText(cStr)
     else
-        playertext:SetText("")
+        coordstext:SetText("")
     end
 end
 
 local function UpdatePosition()
-    if not cursortext or not playertext then return end
+    if not coordstext then return end
     local display = _G["CartoMapper_CoordsFrame"]
     if not display then return end
 
@@ -64,10 +68,8 @@ local function UpdatePosition()
     end
     display:SetFrameLevel((WorldMapFrame:GetFrameLevel() or 1) + 15)
 
-    cursortext:ClearAllPoints()
-    cursortext:SetPoint("LEFT", display, "CENTER", 10, 0)
-    playertext:ClearAllPoints()
-    playertext:SetPoint("RIGHT", display, "CENTER", -10, 0)
+    coordstext:ClearAllPoints()
+    coordstext:SetPoint("CENTER", display, "CENTER", 0, 0)
 end
 
 function Coords.Enable()
@@ -85,9 +87,8 @@ function Coords.Enable()
     display:SetSize(400, 20)
     display:SetFrameLevel((WorldMapFrame:GetFrameLevel() or 1) + 15)
 
-    if not cursortext then
-        cursortext = display:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-        playertext = display:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    if not coordstext then
+        coordstext = display:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     end
     
     UpdatePosition()
