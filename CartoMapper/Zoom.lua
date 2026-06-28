@@ -64,7 +64,6 @@ faderFrame:SetScript("OnUpdate", function(self, elapsed)
 end)
 
 local MAX_ZOOM = 10.0
-local ZOOM_STEP = 0.1
 local MIN_ZOOM = 1.0
 
 local MINIMODE_MIN_ZOOM = 0.5
@@ -351,7 +350,8 @@ local function WorldMapScrollFrame_OnMouseWheel(self, delta)
     local frameY = WorldMapScrollFrame:GetTop() - cursorY
 
     local oldScale = WorldMapDetailFrame:GetScale()
-    local newScale = oldScale * (1.0 + delta * ZOOM_STEP)
+    local zoomStep = CartoMapper.DB.GetOpt("zoomStep") or 0.1
+    local newScale = oldScale * (1.0 + delta * zoomStep)
     newScale = math.max(MIN_ZOOM, newScale)
     
     local maxZoomLimit = CartoMapper.DB.GetOpt("maxZoom") or 10.0

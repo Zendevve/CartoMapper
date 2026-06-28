@@ -3,6 +3,4 @@
 .kilo/
 .gemini/
 *.zip
-/refs/
-refs/
-refs
+/refs

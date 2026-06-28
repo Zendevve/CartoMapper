@@ -23,6 +23,7 @@ local coreDefaults = {
     minimapPos = 225,
     zoneLevels = true,
     rememberZoom = true,
+    zoomStep = 0.1,
     -- Fog clear settings
     fogColorStyle = 1,     -- 0: Blue/Emerald, 1: Normal, 2: Custom
     fogTransparency = 0.7, -- Unexplored area opacity
