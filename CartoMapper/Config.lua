@@ -270,7 +270,10 @@ function CartoMapper.CreateConfigFrame()
             elseif key == "fogTransparency" then
                 if CartoMapper.UpdateFogClearSettings then CartoMapper.UpdateFogClearSettings() end
             elseif key == "mapScale" then
-                if WorldMapFrame then WorldMapFrame:SetScale(value) end
+                if WorldMapFrame then
+                    WorldMapFrame:SetScale(value)
+                    if CartoMapper.UpdateElementScales then CartoMapper.UpdateElementScales() end
+                end
             elseif key == "playerArrowSize" or key == "groupIconSize" then
                 if CartoMapper.UpdateZoom then CartoMapper.UpdateZoom() end
             end

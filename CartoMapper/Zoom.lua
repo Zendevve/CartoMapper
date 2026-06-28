@@ -213,6 +213,32 @@ local function updatePointRelativeTo(frame, newRelativeFrame)
     end
 end
 
+function CartoMapper.UpdateElementScales()
+    local scale = WorldMapFrame:GetScale() or 1.0
+    local invScale = 1 / scale
+
+    if CartoMapper_CoordsFrame then
+        CartoMapper_CoordsFrame:SetScale(invScale)
+    end
+    
+    local fogToggle = _G["CartoMapperFogToggle"]
+    if fogToggle then
+        fogToggle:SetScale(invScale)
+    end
+    
+    if WorldMapTrackQuest then
+        WorldMapTrackQuest:SetScale(invScale)
+    end
+    
+    if WorldMapQuestShowObjectives then
+        WorldMapQuestShowObjectives:SetScale(invScale)
+    end
+    
+    if WorldMapTooltip then
+        WorldMapTooltip:SetScale(invScale)
+    end
+end
+
 local function SetupWorldMapFrame()
     if not WorldMapScrollFrame then return end
     WorldMapScrollFrameScrollBar:Hide()
@@ -231,11 +257,13 @@ local function SetupWorldMapFrame()
     -- Adapt coordinates of quest tracker and frame positions based on WotLK sizes
     WorldMapScrollFrame:ClearAllPoints()
     if WORLDMAP_SETTINGS.size == WORLDMAP_QUESTLIST_SIZE then
+        WorldMapFrame:SetFrameStrata("FULLSCREEN")
         WorldMapScrollFrame:SetPoint("TOPLEFT", WorldMapPositioningGuide, "TOP", -726, -99)
         if WorldMapTrackQuest then
             WorldMapTrackQuest:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 8, 4)
         end
     elseif WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
+        WorldMapFrame:SetFrameStrata("HIGH")
         if WorldMapTrackQuest then
             WorldMapTrackQuest:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 16, -9)
         end
@@ -257,6 +285,7 @@ local function SetupWorldMapFrame()
             WorldMapTitleButton:SetPoint("TOPLEFT", WorldMapFrame, "TOPLEFT", 13, -14)
         end
     else
+        WorldMapFrame:SetFrameStrata("FULLSCREEN")
         WorldMapScrollFrame:SetPoint("TOPLEFT", WorldMapPositioningGuide, "TOPLEFT", 11, -70.5)
         if WorldMapTrackQuest then
             WorldMapTrackQuest:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 16, -9)
@@ -336,6 +365,9 @@ local function SetupWorldMapFrame()
 
     -- Update detail tiles visibility for landmass borderless mask
     UpdateDetailTilesVisibility()
+
+    -- Correct element scales for text/tooltips
+    CartoMapper.UpdateElementScales()
 end
 
 function CartoMapper.UpdateBorderless()
@@ -801,6 +833,10 @@ function Zoom.Enable()
                         WorldMapFrame:SetScale(newScale)
                         CartoMapper.DB.SetOpt("mapScale", newScale)
                         
+                        if CartoMapper.UpdateElementScales then
+                            CartoMapper.UpdateElementScales()
+                        end
+                        
                         if CartoMapperConfigFrame and CartoMapperConfigFrame:IsShown() then
                             CartoMapperConfigFrame:UpdateAllValues()
                         end
@@ -924,6 +960,15 @@ function Zoom.Enable()
             CartoMapper.UpdateClickThrough()
         end
     end)
+
+    -- Hook tooltip OnShow to scale it inversely to map scale
+    if WorldMapTooltip and not Zoom.hookedTooltip then
+        WorldMapTooltip:HookScript("OnShow", function(self)
+            local scale = WorldMapFrame:GetScale() or 1.0
+            self:SetScale(1 / scale)
+        end)
+        Zoom.hookedTooltip = true
+    end
 end
 
 function Zoom.Disable()
