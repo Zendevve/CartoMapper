@@ -119,7 +119,11 @@ local function SetDetailFrameScale(scale)
     if WorldMapScrollFrame then
         WorldMapScrollFrame:UpdateScrollChildRect()
     end
-    SetPOIMaxBounds()
+    if WorldMapFrame_SetPOIMaxBounds then
+        WorldMapFrame_SetPOIMaxBounds()
+    else
+        SetPOIMaxBounds()
+    end
 
     -- Correct scaling on map sub-elements so they do not bloat when zoomed in
     local invScale = 1 / scale
