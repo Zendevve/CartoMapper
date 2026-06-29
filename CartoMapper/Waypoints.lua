@@ -181,6 +181,25 @@ function Waypoints.GetPinFrame(index)
     return pinPool[index]
 end
 
+local function GetColorGradient(perc)
+    -- Interpolate between Red (1.0, 0.1, 0.1), Yellow (1.0, 1.0, 0.1), and Green (0.1, 1.0, 0.1)
+    if perc >= 0.5 then
+        -- Interpolate between Yellow (0.5) and Green (1.0)
+        local factor = (perc - 0.5) * 2 -- 0 to 1
+        local r = 1.0 - 0.9 * factor
+        local g = 1.0
+        local b = 0.1
+        return r, g, b
+    else
+        -- Interpolate between Red (0.0) and Yellow (0.5)
+        local factor = perc * 2 -- 0 to 1
+        local r = 1.0
+        local g = 0.1 + 0.9 * factor
+        local b = 0.1
+        return r, g, b
+    end
+end
+
 -- Navigation HUD Arrow Update loop
 local last_active_wp_id = nil
 local last_distance = 0
@@ -244,8 +263,6 @@ local function Arrow_OnUpdate(self, elapsed)
         return
     end
     
-    -- Waypoint is in the same zone
-    self.arrowTex:SetVertexColor(0.1, 1.0, 0.1, 1.0) -- Active green arrow
     
     local dist = GetDistanceInYards(px, py, wp.x / 100, wp.y / 100)
     
@@ -304,6 +321,18 @@ local function Arrow_OnUpdate(self, elapsed)
     local rotation = -(targetAngle + facing)
     
     self.arrowTex:SetRotation(rotation)
+    
+    -- Calculate color gradient based on deviation from perfect course (0 deviation = green, 180 = red)
+    local relAngle = rotation % (math.pi * 2)
+    if relAngle > math.pi then
+        relAngle = relAngle - math.pi * 2
+    elseif relAngle < -math.pi then
+        relAngle = relAngle + math.pi * 2
+    end
+    
+    local perc = (math.pi - math.abs(relAngle)) / math.pi
+    local r, g, b = GetColorGradient(perc)
+    self.arrowTex:SetVertexColor(r, g, b, 1.0)
     
     -- Format distance and ETA next to it
     local etaText = ""
