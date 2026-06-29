@@ -1,14 +1,60 @@
-Copyright (c) 2026 Zendevve (https://github.com/Zendevve/CartoMapper)
-All Rights Reserved.
+COPYRIGHT NOTICE AND LIMITED PERSONAL USE TERMS
 
-This software and its source code are the sole property of the creator, Zendevve.
+Project: CartoMapper
+Description: Unified Map Enhancement Addon (clears fog of war, enables scrolling/zooming/panning, displays coordinates, colors group mates, and shows points of interest).
+Copyright (c) 2026 Zendevve. All rights reserved.
 
-Redistribution, modification, and the creation of derivative works (including, but not limited to, public forks, re-uploads, or inclusion in other addon compilations) are strictly prohibited without the express written permission of the copyright holder.
+Source: https://github.com/Zendevve/CartoMapper
 
-Personal Use:
-Permission is hereby granted, free of charge, to any person downloading a copy of this software, to run the software locally on their own device for personal, non-commercial gameplay.
+1. OWNERSHIP
 
-Attribution & Credit:
-Under no circumstances may anyone copy, distribute, or present any portion of this codebase, assets, or databases as their own work. In any permitted sharing, full credit and links to the original repository (https://github.com/Zendevve/CartoMapper) must be prominently displayed.
+CartoMapper is proprietary software owned by the copyright holder, except for
+third-party components, Blizzard assets, World of Warcraft names, and API
+references which remain the property of their respective owners.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+2. PERMITTED USE
+
+You may download, view, study, fork, and install this software solely for
+personal, non-commercial use within World of Warcraft.
+
+Any copying is permitted only as technically necessary for downloading,
+viewing, forking, installing, backing up, or using the software as distributed
+by the copyright holder.
+
+3. RESTRICTIONS
+
+Without prior written permission from the copyright holder, you may not:
+
+- Modify, edit, rename, reorganize, adapt, or create derivative works from
+  this software or any part of its source code.
+- Redistribute, mirror, re-upload, publish, or host this software or modified
+  versions of it on third-party platforms.
+- Sell, rent, sublicense, monetize, bundle, or include this software in addon
+  packs, services, or commercial offerings.
+- Copy, extract, reuse, port, or incorporate any part of the source code,
+  architecture, libraries, logic, or original assets into another project.
+- Remove copyright notices, change attribution, or claim authorship of any
+  part of this software.
+
+4. FORKS
+
+Forking is permitted only for personal viewing, study, backup, or installation
+purposes. Forks may not be modified, redistributed, published as derivative
+works, or used as the basis for another project without prior written
+permission.
+
+5. EMBEDDED LIBRARIES
+
+Embedded libraries or custom assets authored by the copyright holder are
+proprietary and may be subject to additional restrictions in their own license
+or copyright notice.
+
+6. NO WARRANTY
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE COPYRIGHT HOLDER SHALL
+NOT BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE
+OF THIS SOFTWARE.
+
+Any use outside the permissions granted above is prohibited unless explicitly
+authorized in writing by the copyright holder.
