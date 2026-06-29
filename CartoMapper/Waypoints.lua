@@ -11,6 +11,9 @@ Waypoints.defaults = {
     waypoints = true,
     waypointsArrowX = nil,
     waypointsArrowY = nil,
+    waypointsArrivalDist = 15,
+    waypointsArrowScale = 1.0,
+    waypointsArrowAlpha = 1.0,
 }
 
 -- Internal state
@@ -184,11 +187,23 @@ local function Arrow_OnUpdate(self, elapsed)
     if lastUpdate < 0.05 then return end
     lastUpdate = 0
     
+    -- Hide arrow in instances (dungeons, raids, battlegrounds)
+    if IsInInstance() then
+        self:Hide()
+        return
+    end
+    
     local wp = Waypoints.GetActive()
     if not wp then
         self:Hide()
         return
     end
+    
+    -- Apply user-configured arrow scale and alpha
+    local arrowScale = CartoMapper.DB.GetOpt("waypointsArrowScale") or 1.0
+    local arrowAlpha = CartoMapper.DB.GetOpt("waypointsArrowAlpha") or 1.0
+    self:SetScale(arrowScale)
+    self:SetAlpha(arrowAlpha)
     
     local px, py = GetPlayerMapPosition("player")
     if not px or px == 0 or py == 0 then
@@ -224,8 +239,10 @@ local function Arrow_OnUpdate(self, elapsed)
     
     local dist = GetDistanceInYards(px, py, wp.x / 100, wp.y / 100)
     
-    -- Check if reached (within 8 yards)
-    if dist < 8 then
+    -- Check if reached (within configurable arrival distance)
+    -- Skip auto-clear if player is on a taxi/flight path
+    local arrivalDist = CartoMapper.DB.GetOpt("waypointsArrivalDist") or 15
+    if dist < arrivalDist and not UnitOnTaxi("player") then
         PlaySoundFile("Sound\\Interface\\LevelUp.wav")
         UIErrorsFrame:AddMessage("Waypoint Reached!", 0.1, 1.0, 0.1, 1.0, 5)
         print("|cff00ff00[CartoMapper] Reached Waypoint: " .. (wp.desc or string.format("%.1f, %.1f", wp.x, wp.y)) .. "|r")
@@ -320,11 +337,18 @@ function Waypoints.Enable()
         table.insert(activeWaypoints, wp)
     end
     
-    -- Register slash command
+    -- Register slash commands
     SLASH_CARTOMAPPER_WAY1 = "/way"
     SlashCmdList["CARTOMAPPER_WAY"] = function(msg)
         if not CartoMapper.DB.GetOpt("waypoints") then return end
         Waypoints.HandleSlashCommand(msg)
+    end
+    
+    SLASH_CARTOMAPPER_WAYBACK1 = "/wayback"
+    SLASH_CARTOMAPPER_WAYBACK2 = "/wayb"
+    SlashCmdList["CARTOMAPPER_WAYBACK"] = function()
+        if not CartoMapper.DB.GetOpt("waypoints") then return end
+        Waypoints.WayBack()
     end
     
     -- Setup secure hooks for mapping
@@ -363,6 +387,7 @@ function Waypoints.HandleSlashCommand(msg)
         print("  |cff00ff00/way [x] [y] [desc]|r - Add waypoint in current zone")
         print("  |cff00ff00/way [zone] [x] [y] [desc]|r - Add waypoint in target zone")
         print("  |cff00ff00/way clear|r - Clear all active waypoints")
+        print("  |cff00ff00/wayback|r or |cff00ff00/wayb|r - Bookmark current position")
         return
     end
     
@@ -423,6 +448,15 @@ end
 
 -- Core Add/Remove/Clear operations
 function Waypoints.Add(wp)
+    -- Duplicate waypoint prevention: skip if same zone + coords (within 0.5) already exist
+    for _, existing in ipairs(activeWaypoints) do
+        if existing.zone == wp.zone and math.abs(existing.x - wp.x) < 0.5 and math.abs(existing.y - wp.y) < 0.5 then
+            print(string.format("|cffffd700[CartoMapper] Waypoint already exists near (%.1f, %.1f) in %s. Setting as active.|r", wp.x, wp.y, wp.zone))
+            Waypoints.SetActive(existing)
+            return
+        end
+    end
+    
     table.insert(activeWaypoints, wp)
     CartoMapper.DB.SetOpt("waypointsList", activeWaypoints)
     
@@ -530,6 +564,36 @@ function CartoMapper.AddWaypointAt(x, y)
         x = x,
         y = y,
         desc = string.format("Custom Pin (%.1f, %.1f)", x, y),
+        id = GetTime() .. "_" .. math.random(1000)
+    }
+    
+    Waypoints.Add(wp)
+end
+
+-- /wayback: Bookmark current player position as a waypoint
+function Waypoints.WayBack()
+    SetMapToCurrentZone()
+    local px, py = GetPlayerMapPosition("player")
+    if not px or px == 0 or py == 0 then
+        print("|cffff0000[CartoMapper] Cannot determine your current position.|r")
+        return
+    end
+    
+    local c = GetCurrentMapContinent()
+    local z = GetCurrentMapZone()
+    local zones = { GetMapZones(c) }
+    local targetZone = zones[z]
+    
+    if not targetZone then
+        print("|cffff0000[CartoMapper] Current zone could not be determined.|r")
+        return
+    end
+    
+    local wp = {
+        zone = targetZone,
+        x = px * 100,
+        y = py * 100,
+        desc = "Wayback: " .. targetZone,
         id = GetTime() .. "_" .. math.random(1000)
     }
     
