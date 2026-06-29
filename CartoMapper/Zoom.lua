@@ -1014,6 +1014,29 @@ function Zoom.Enable()
         end)
         Zoom.hookedTooltip = true
     end
+
+    local function IsDescendantOf(frame, parent)
+        while frame do
+            if frame == parent then return true end
+            frame = frame:GetParent()
+        end
+        return false
+    end
+
+    if not Zoom.hookedDropDown then
+        hooksecurefunc("ToggleDropDownMenu", function(level, value, dropDownFrame, anchorName, xOffset, yOffset, menuList, button)
+            if WorldMapFrame and WorldMapFrame:IsShown() and WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
+                if dropDownFrame and IsDescendantOf(dropDownFrame, WorldMapFrame) then
+                    local scale = WorldMapFrame:GetScale() or 1.0
+                    local list = _G["DropDownList" .. (level or 1)]
+                    if list then
+                        list:SetScale(scale)
+                    end
+                end
+            end
+        end)
+        Zoom.hookedDropDown = true
+    end
 end
 
 function Zoom.Disable()

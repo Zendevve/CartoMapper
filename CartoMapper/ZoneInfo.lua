@@ -182,3 +182,20 @@ zoneChangeFrame:SetScript("OnEvent", function()
         delayFrame:Show()
     end
 end)
+
+-- Hook WorldMapFrameAreaLabel to append zone level ranges and fishing skill levels
+local updatingAreaLabel = false
+if WorldMapFrameAreaLabel then
+    hooksecurefunc(WorldMapFrameAreaLabel, "SetText", function(self, text)
+        if updatingAreaLabel then return end
+        if not text or text == "" then return end
+        if not CartoMapper.DB.GetOpt("zoneLevels") then return end
+        
+        local formatted = CartoMapper.GetFormattedZoneLevelText(text)
+        if formatted and formatted ~= text then
+            updatingAreaLabel = true
+            self:SetText(formatted)
+            updatingAreaLabel = false
+        end
+    end)
+end

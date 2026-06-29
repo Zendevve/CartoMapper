@@ -324,6 +324,34 @@ local function Arrow_OnUpdate(self, elapsed)
     end
 end
 
+local function SetClosestWaypoint()
+    SetMapToCurrentZone()
+    local px, py = GetPlayerMapPosition("player")
+    if not px or px == 0 or py == 0 then return nil end
+    
+    local c = GetCurrentMapContinent()
+    local z = GetCurrentMapZone()
+    if c <= 0 or z <= 0 then return nil end
+    local zones = { GetMapZones(c) }
+    local currentZoneName = zones[z]
+    if not currentZoneName then return nil end
+    
+    local closestWp = nil
+    local minDistance = math.huge
+    
+    for _, wp in ipairs(activeWaypoints) do
+        if wp.zone == currentZoneName then
+            local dist = GetDistanceInYards(px, py, wp.x / 100, wp.y / 100)
+            if dist < minDistance then
+                minDistance = dist
+                closestWp = wp
+            end
+        end
+    end
+    
+    return closestWp
+end
+
 -- Create the arrow frame
 local function CreateArrowFrame()
     if arrowFrame then return end
@@ -405,6 +433,19 @@ function Waypoints.Enable()
     SlashCmdList["CARTOMAPPER_WAYBACK"] = function()
         if not CartoMapper.DB.GetOpt("waypoints") then return end
         Waypoints.WayBack()
+    end
+    
+    SLASH_CARTOMAPPER_CLOSEST1 = "/cway"
+    SLASH_CARTOMAPPER_CLOSEST2 = "/closestway"
+    SlashCmdList["CARTOMAPPER_CLOSEST"] = function()
+        if not CartoMapper.DB.GetOpt("waypoints") then return end
+        local closest = SetClosestWaypoint()
+        if closest then
+            Waypoints.SetActive(closest)
+            print("|cff00ff00[CartoMapper] Active waypoint set to closest: " .. (closest.desc or string.format("%.1f, %.1f", closest.x, closest.y)) .. "|r")
+        else
+            print("|cffff0000[CartoMapper] No waypoints found in your current zone.|r")
+        end
     end
     
     -- Setup secure hooks for mapping
@@ -553,7 +594,12 @@ function Waypoints.Remove(wp)
     -- If active waypoint was removed, switch arrow target
     if wasActive then
         if #activeWaypoints > 0 then
-            Waypoints.SetActive(activeWaypoints[#activeWaypoints])
+            local closest = SetClosestWaypoint()
+            if closest then
+                Waypoints.SetActive(closest)
+            else
+                Waypoints.SetActive(activeWaypoints[#activeWaypoints])
+            end
         else
             if arrowFrame then arrowFrame:Hide() end
         end
