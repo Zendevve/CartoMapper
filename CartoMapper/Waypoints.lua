@@ -447,12 +447,17 @@ function Waypoints.HandleSlashCommand(msg)
 end
 
 -- Core Add/Remove/Clear operations
-function Waypoints.Add(wp)
+-- skipActivate: if true, the waypoint is saved but NOT set as the active arrow target
+function Waypoints.Add(wp, skipActivate)
     -- Duplicate waypoint prevention: skip if same zone + coords (within 0.5) already exist
     for _, existing in ipairs(activeWaypoints) do
         if existing.zone == wp.zone and math.abs(existing.x - wp.x) < 0.5 and math.abs(existing.y - wp.y) < 0.5 then
-            print(string.format("|cffffd700[CartoMapper] Waypoint already exists near (%.1f, %.1f) in %s. Setting as active.|r", wp.x, wp.y, wp.zone))
-            Waypoints.SetActive(existing)
+            if not skipActivate then
+                print(string.format("|cffffd700[CartoMapper] Waypoint already exists near (%.1f, %.1f) in %s. Setting as active.|r", wp.x, wp.y, wp.zone))
+                Waypoints.SetActive(existing)
+            else
+                print(string.format("|cffffd700[CartoMapper] Waypoint already exists near (%.1f, %.1f) in %s.|r", wp.x, wp.y, wp.zone))
+            end
             return
         end
     end
@@ -462,8 +467,10 @@ function Waypoints.Add(wp)
     
     print(string.format("|cff00ff00[CartoMapper] Added waypoint: %s (%.1f, %.1f)%s|r", 
         wp.zone, wp.x, wp.y, wp.desc and (" - " .. wp.desc) or ""))
-        
-    Waypoints.SetActive(wp)
+    
+    if not skipActivate then
+        Waypoints.SetActive(wp)
+    end
     
     if WorldMapFrame and WorldMapFrame:IsShown() then
         Waypoints.UpdateMapPins()
@@ -597,5 +604,6 @@ function Waypoints.WayBack()
         id = GetTime() .. "_" .. math.random(1000)
     }
     
-    Waypoints.Add(wp)
+    Waypoints.Add(wp, true) -- skipActivate: don't point arrow at the spot we're standing on
+    print("|cff00ff00[CartoMapper] Position bookmarked. Use /way to navigate back later.|r")
 end
