@@ -14,6 +14,7 @@ Waypoints.defaults = {
     waypointsArrivalDist = 15,
     waypointsArrowScale = 1.0,
     waypointsArrowAlpha = 1.0,
+    waypointsShowETA = true,
 }
 
 -- Internal state
@@ -181,20 +182,26 @@ function Waypoints.GetPinFrame(index)
 end
 
 -- Navigation HUD Arrow Update loop
+local last_active_wp_id = nil
+local last_distance = 0
+local tta_throttle = 0
+local smoothed_speed = 0
 local lastUpdate = 0
+
 local function Arrow_OnUpdate(self, elapsed)
     lastUpdate = lastUpdate + elapsed
     if lastUpdate < 0.05 then return end
-    lastUpdate = 0
     
     -- Hide arrow in instances (dungeons, raids, battlegrounds)
     if IsInInstance() then
+        lastUpdate = 0
         self:Hide()
         return
     end
     
     local wp = Waypoints.GetActive()
     if not wp then
+        lastUpdate = 0
         self:Hide()
         return
     end
@@ -207,6 +214,7 @@ local function Arrow_OnUpdate(self, elapsed)
     
     local px, py = GetPlayerMapPosition("player")
     if not px or px == 0 or py == 0 then
+        lastUpdate = 0
         self.text:SetText("No Position Signal")
         self.arrowTex:SetRotation(0)
         self.arrowTex:SetVertexColor(0.6, 0.6, 0.6, 0.6)
@@ -218,6 +226,7 @@ local function Arrow_OnUpdate(self, elapsed)
     local currentContinent = GetCurrentMapContinent()
     local currentZone = GetCurrentMapZone()
     if currentContinent <= 0 or currentZone <= 0 then
+        lastUpdate = 0
         self.text:SetText(string.format("Go to:\n%s", wp.zone))
         self.arrowTex:SetRotation(0)
         self.arrowTex:SetVertexColor(0.6, 0.6, 0.6, 0.6)
@@ -228,6 +237,7 @@ local function Arrow_OnUpdate(self, elapsed)
     local playerZoneName = zones[currentZone]
     
     if playerZoneName ~= wp.zone then
+        lastUpdate = 0
         self.text:SetText(string.format("Go to:\n%s", wp.zone))
         self.arrowTex:SetRotation(0)
         self.arrowTex:SetVertexColor(0.6, 0.6, 0.6, 0.6)
@@ -243,12 +253,47 @@ local function Arrow_OnUpdate(self, elapsed)
     -- Skip auto-clear if player is on a taxi/flight path
     local arrivalDist = CartoMapper.DB.GetOpt("waypointsArrivalDist") or 15
     if dist < arrivalDist and not UnitOnTaxi("player") then
+        lastUpdate = 0
         PlaySoundFile("Sound\\Interface\\LevelUp.wav")
         UIErrorsFrame:AddMessage("Waypoint Reached!", 0.1, 1.0, 0.1, 1.0, 5)
         print("|cff00ff00[CartoMapper] Reached Waypoint: " .. (wp.desc or string.format("%.1f, %.1f", wp.x, wp.y)) .. "|r")
         Waypoints.Remove(wp)
         return
     end
+    
+    -- Calculate speed and ETA
+    if last_active_wp_id ~= wp.id then
+        last_active_wp_id = wp.id
+        last_distance = dist
+        tta_throttle = 0
+        smoothed_speed = 0
+    end
+    
+    tta_throttle = tta_throttle + lastUpdate
+    if tta_throttle >= 0.5 then
+        local delta = last_distance - dist
+        -- Ignore huge jumps (teleports, loading screens, zone shifts)
+        if math.abs(delta) < 100 then
+            local current_speed = delta / tta_throttle
+            if current_speed > 0 then
+                if smoothed_speed == 0 then
+                    smoothed_speed = current_speed
+                else
+                    smoothed_speed = 0.2 * current_speed + 0.8 * smoothed_speed
+                end
+            else
+                -- Decay speed quickly if player stops or moves backward
+                smoothed_speed = 0.5 * smoothed_speed
+                if smoothed_speed < 0.1 then smoothed_speed = 0 end
+            end
+        else
+            smoothed_speed = 0
+        end
+        last_distance = dist
+        tta_throttle = 0
+    end
+    
+    lastUpdate = 0
     
     -- Calculate yaw rotation
     local dx = (wp.x / 100) - px
@@ -260,7 +305,18 @@ local function Arrow_OnUpdate(self, elapsed)
     
     self.arrowTex:SetRotation(rotation)
     
-    local distText = string.format("%d yards", math.floor(dist))
+    -- Format distance and ETA next to it
+    local etaText = ""
+    if CartoMapper.DB.GetOpt("waypointsShowETA") and smoothed_speed > 0.5 then
+        local eta = dist / smoothed_speed
+        if eta > 3600 then
+            etaText = string.format(" (%d:%02d:%02d)", eta / 3600, (eta % 3600) / 60, eta % 60)
+        else
+            etaText = string.format(" (%d:%02d)", eta / 60, eta % 60)
+        end
+    end
+    
+    local distText = string.format("%d yards%s", math.floor(dist), etaText)
     if wp.desc then
         self.text:SetText(string.format("%s\n%s", wp.desc, distText))
     else

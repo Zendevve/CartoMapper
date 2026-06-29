@@ -314,13 +314,14 @@ function CartoMapper.CreateConfigFrame()
     CreateSlider(panelGen, "Coordinates Accuracy", "coordsAccuracy", 0, 2, 1, "%.0f", "Sets the number of decimal places for map coordinates.", 15, -225, false)
 
     CreateCheckbox(panelGen, "Enable Waypoints System", "waypoints", "Enables Ctrl+Left Click to set waypoints and displays an on-screen navigation arrow.", 15, -285, false)
-    CreateSlider(panelGen, "Arrival Distance (yards)", "waypointsArrivalDist", 5, 150, 1, "%.0f", "Distance in yards at which a waypoint is considered reached and auto-cleared. Ignored while on a taxi.", 15, -345, false)
-    CreateSlider(panelGen, "Arrow Scale", "waypointsArrowScale", 0.3, 3.0, 0.1, "%.1f", "Scale of the on-screen navigation arrow HUD.", 15, -405, false)
-    CreateSlider(panelGen, "Arrow Opacity", "waypointsArrowAlpha", 0.1, 1.0, 0.05, "%.2f", "Opacity of the on-screen navigation arrow HUD.", 15, -465, false)
+    CreateCheckbox(panelGen, "Show Time-to-Arrival (ETA)", "waypointsShowETA", "Shows the estimated travel time next to the distance display on the navigation arrow.", 15, -315, false)
+    CreateSlider(panelGen, "Arrival Distance (yards)", "waypointsArrivalDist", 5, 150, 1, "%.0f", "Distance in yards at which a waypoint is considered reached and auto-cleared. Ignored while on a taxi.", 15, -375, false)
+    CreateSlider(panelGen, "Arrow Scale", "waypointsArrowScale", 0.3, 3.0, 0.1, "%.1f", "Scale of the on-screen navigation arrow HUD.", 15, -435, false)
+    CreateSlider(panelGen, "Arrow Opacity", "waypointsArrowAlpha", 0.1, 1.0, 0.05, "%.2f", "Opacity of the on-screen navigation arrow HUD.", 15, -495, false)
 
     local clearWpBtn = CreateFrame("Button", "CartoMapperClearWaypointsButton", panelGen, "UIPanelButtonTemplate")
     clearWpBtn:SetSize(160, 22)
-    clearWpBtn:SetPoint("TOPLEFT", panelGen, "TOPLEFT", 15, -515)
+    clearWpBtn:SetPoint("TOPLEFT", panelGen, "TOPLEFT", 15, -545)
     clearWpBtn:SetText("Clear All Waypoints")
     clearWpBtn:SetScript("OnClick", function()
         if CartoMapper.modules["waypoints"] and CartoMapper.modules["waypoints"].ClearAll then
