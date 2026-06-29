@@ -347,7 +347,7 @@ local function SetupWorldMapFrame()
     if WorldMapPOIFrame:GetParent() ~= WorldMapDetailFrame then
         WorldMapPOIFrame:SetParent(WorldMapDetailFrame)
     end
-    if WorldMapBlobFrame:GetParent() ~= WorldMapDetailFrame then
+    if not InCombatLockdown() and WorldMapBlobFrame:GetParent() ~= WorldMapDetailFrame then
         WorldMapBlobFrame:SetParent(WorldMapDetailFrame)
         WorldMapBlobFrame:ClearAllPoints()
         WorldMapBlobFrame:SetAllPoints(WorldMapDetailFrame)
@@ -1013,6 +1013,68 @@ function Zoom.Enable()
             self:SetFrameStrata("TOOLTIP")
         end)
         Zoom.hookedTooltip = true
+    end
+
+    -- Combat safe quest blob handler to prevent action-blocked taints in combat
+    local combatFrame = _G["CartoMapperCombatFrame"] or CreateFrame("Frame", "CartoMapperCombatFrame")
+    combatFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    combatFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+    
+    local blobWasVisible, blobNewScale
+    local blobHideFunc = function() blobWasVisible = nil end
+    local blobShowFunc = function() blobWasVisible = true end
+    local blobScaleFunc = function(self, scale) blobNewScale = scale end
+    
+    local updateFrame = CreateFrame("Frame")
+    local function restoreBlobs()
+        if WorldMapBlobFrame_CalculateHitTranslations then
+            WorldMapBlobFrame_CalculateHitTranslations()
+        end
+        if WorldMapQuestScrollChildFrame and WorldMapQuestScrollChildFrame.selected and not WorldMapQuestScrollChildFrame.selected.completed then
+            WorldMapBlobFrame:DrawQuestBlob(WorldMapQuestScrollChildFrame.selected.questId, true)
+        end
+        updateFrame:SetScript("OnUpdate", nil)
+    end
+    
+    combatFrame:SetScript("OnEvent", function(self, event)
+        if event == "PLAYER_REGEN_DISABLED" then
+            if WorldMapBlobFrame then
+                blobWasVisible = WorldMapBlobFrame:IsShown()
+                blobNewScale = nil
+                WorldMapBlobFrame:SetParent(nil)
+                WorldMapBlobFrame:ClearAllPoints()
+                WorldMapBlobFrame:SetPoint("TOP", UIParent, "BOTTOM")
+                WorldMapBlobFrame:Hide()
+                WorldMapBlobFrame.Hide = blobHideFunc
+                WorldMapBlobFrame.Show = blobShowFunc
+                WorldMapBlobFrame.SetScale = blobScaleFunc
+            end
+        elseif event == "PLAYER_REGEN_ENABLED" then
+            if WorldMapBlobFrame then
+                WorldMapBlobFrame:SetParent(WorldMapDetailFrame)
+                WorldMapBlobFrame:ClearAllPoints()
+                WorldMapBlobFrame:SetAllPoints(WorldMapDetailFrame)
+                WorldMapBlobFrame.Hide = nil
+                WorldMapBlobFrame.Show = nil
+                WorldMapBlobFrame.SetScale = nil
+                if blobWasVisible then
+                    WorldMapBlobFrame:Show()
+                    updateFrame:SetScript("OnUpdate", restoreBlobs)
+                end
+                if blobNewScale then
+                    WorldMapBlobFrame:SetScale(blobNewScale)
+                    WorldMapBlobFrame.xRatio = nil
+                    blobNewScale = nil
+                end
+                if WorldMapQuestScrollChildFrame and WorldMapQuestScrollChildFrame.selected then
+                    WorldMapBlobFrame:DrawQuestBlob(WorldMapQuestScrollChildFrame.selected.questId, false)
+                end
+            end
+        end
+    end)
+
+    if InCombatLockdown() then
+        combatFrame:GetScript("OnEvent")(combatFrame, "PLAYER_REGEN_DISABLED")
     end
 
     local function IsDescendantOf(frame, parent)
