@@ -553,7 +553,7 @@ local Textures = {
     ["TravelH"] = "Interface\\TaxiFrame\\UI-Taxi-Icon-Green",
     ["TravelN"] = "Interface\\TaxiFrame\\UI-Taxi-Icon-Green",
     ["Spirit"] = "Interface\\TargetingFrame\\PortraitQuestGiver",
-    ["Arrow"] = "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up",
+    ["Arrow"] = "Interface\\AddOns\\CartoMapper\\assets\\WorldMapArrow",
 }
 
 local function AcquirePin()
@@ -579,6 +579,10 @@ local function ReleasePins()
         pin:SetScript("OnLeave", nil)
         pin:SetScript("OnClick", nil)
         pin.targetMapID = nil
+        if pin.texture then
+            pin.texture:SetRotation(0)
+            pin.texture:SetVertexColor(1, 1, 1, 1)
+        end
     end
     -- Move all active pins to the pool in a single sweep
     for _, pin in ipairs(activePins) do
@@ -606,8 +610,10 @@ local function Pin_OnLeave(self)
     end
 end
 
-local function Pin_OnClick(self)
-    if self.targetMapID then
+local function Pin_OnClick(self, button)
+    if button == "RightButton" then
+        SetMapZoom(-1)
+    elseif self.targetMapID then
         -- Zoom/Transition to target map if it is a zone crossing arrow
         SetMapByID(self.targetMapID)
     end
@@ -668,6 +674,13 @@ local function DrawPins()
             -- Texture
             pin.texture:SetTexture(Textures[pinType] or "Interface\\Minimap\\MiniMap-QuestGiver")
 
+            if pinType == "Arrow" then
+                if arrowAngle then
+                    pin.texture:SetRotation(arrowAngle)
+                end
+                pin.texture:SetVertexColor(0.2, 1.0, 0.2, 1.0)
+            end
+
             pin.title = title
             
             -- Append dungeon level range to title if present
@@ -681,7 +694,10 @@ local function DrawPins()
             pin:SetScript("OnEnter", Pin_OnEnter)
             pin:SetScript("OnLeave", Pin_OnLeave)
             if targetMapID then
+                pin:RegisterForClicks("LeftButtonUp", "RightButtonUp")
                 pin:SetScript("OnClick", Pin_OnClick)
+            else
+                pin:RegisterForClicks("LeftButtonUp")
             end
         end
     end
