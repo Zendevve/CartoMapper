@@ -27,9 +27,14 @@ local zoneMapList = {}
 local zoneWidth = 2000
 local zoneHeight = 1333
 
-local function GetDistanceInYards(x1, y1, x2, y2)
+local function GetYardVectors(x1, y1, x2, y2)
     local dx = (x2 - x1) * zoneWidth
-    local dy = (y2 - y1) * zoneHeight
+    local dy = (y2 - y1) * zoneHeight * 1.5
+    return dx, dy
+end
+
+local function GetDistanceInYards(x1, y1, x2, y2)
+    local dx, dy = GetYardVectors(x1, y1, x2, y2)
     return math.sqrt(dx*dx + dy*dy)
 end
 
@@ -202,8 +207,8 @@ end
 
 -- Navigation HUD Arrow Update loop
 local last_active_wp_id = nil
-local last_distance = 0
-local tta_throttle = 0
+local last_px, last_py = nil, nil
+local last_zone = nil
 local smoothed_speed = 0
 local lastUpdate = 0
 
@@ -237,6 +242,7 @@ local function Arrow_OnUpdate(self, elapsed)
         self.text:SetText("No Position Signal")
         self.arrowTex:SetRotation(0)
         self.arrowTex:SetVertexColor(0.6, 0.6, 0.6, 0.6)
+        last_px, last_py = nil, nil
         return
     end
     
@@ -249,6 +255,7 @@ local function Arrow_OnUpdate(self, elapsed)
         self.text:SetText(string.format("Go to:\n%s", wp.zone))
         self.arrowTex:SetRotation(0)
         self.arrowTex:SetVertexColor(0.6, 0.6, 0.6, 0.6)
+        last_px, last_py = nil, nil
         return
     end
     
@@ -260,9 +267,36 @@ local function Arrow_OnUpdate(self, elapsed)
         self.text:SetText(string.format("Go to:\n%s", wp.zone))
         self.arrowTex:SetRotation(0)
         self.arrowTex:SetVertexColor(0.6, 0.6, 0.6, 0.6)
+        last_px, last_py = nil, nil
         return
     end
     
+    -- Reset tracking state on zone changes or target changes
+    if last_zone ~= currentZone or last_active_wp_id ~= wp.id then
+        last_zone = currentZone
+        last_active_wp_id = wp.id
+        last_px, last_py = nil, nil
+        smoothed_speed = 0
+    end
+    
+    -- Running velocity filter (calculate speed based on actual coordinates displacement)
+    if last_px and last_py then
+        local moveDist = GetDistanceInYards(last_px, last_py, px, py)
+        local dt = lastUpdate
+        if dt > 0 then
+            -- Avoid speed spikes from teleports, zoning, or jumps (threshold 100 yards)
+            if moveDist < 100 then
+                local instant_speed = moveDist / dt
+                -- Running filter: 0.85 old + 0.15 new
+                smoothed_speed = 0.85 * smoothed_speed + 0.15 * instant_speed
+            else
+                smoothed_speed = 0
+            end
+        end
+    else
+        smoothed_speed = 0
+    end
+    last_px, last_py = px, py
     
     local dist = GetDistanceInYards(px, py, wp.x / 100, wp.y / 100)
     
@@ -278,51 +312,20 @@ local function Arrow_OnUpdate(self, elapsed)
         return
     end
     
-    -- Calculate speed and ETA
-    if last_active_wp_id ~= wp.id then
-        last_active_wp_id = wp.id
-        last_distance = dist
-        tta_throttle = 0
-        smoothed_speed = 0
-    end
-    
-    tta_throttle = tta_throttle + lastUpdate
-    if tta_throttle >= 0.5 then
-        local delta = last_distance - dist
-        -- Ignore huge jumps (teleports, loading screens, zone shifts)
-        if math.abs(delta) < 100 then
-            local current_speed = delta / tta_throttle
-            if current_speed > 0 then
-                if smoothed_speed == 0 then
-                    smoothed_speed = current_speed
-                else
-                    smoothed_speed = 0.2 * current_speed + 0.8 * smoothed_speed
-                end
-            else
-                -- Decay speed quickly if player stops or moves backward
-                smoothed_speed = 0.5 * smoothed_speed
-                if smoothed_speed < 0.1 then smoothed_speed = 0 end
-            end
-        else
-            smoothed_speed = 0
-        end
-        last_distance = dist
-        tta_throttle = 0
-    end
-    
     lastUpdate = 0
     
-    -- Calculate yaw rotation
-    local dx = (wp.x / 100) - px
-    local dy = py - (wp.y / 100)
+    -- Calculate yaw rotation using corrected aspect ratio vectors
+    local target_x, target_y = wp.x / 100, wp.y / 100
+    local dx = (target_x - px) * zoneWidth
+    local dy = (py - target_y) * zoneHeight * 1.5
     
-    local targetAngle = math.atan2(dx * 1.5, dy)
+    local targetAngle = math.atan2(dx, dy)
     local facing = GetPlayerFacing() or 0
     local rotation = -(targetAngle + facing)
     
     self.arrowTex:SetRotation(rotation)
     
-    -- Calculate color gradient based on deviation from perfect course (0 deviation = green, 180 = red)
+    -- Calculate relative angle difference (-pi to pi)
     local relAngle = rotation % (math.pi * 2)
     if relAngle > math.pi then
         relAngle = relAngle - math.pi * 2
@@ -330,12 +333,40 @@ local function Arrow_OnUpdate(self, elapsed)
         relAngle = relAngle + math.pi * 2
     end
     
-    local perc = (math.pi - math.abs(relAngle)) / math.pi
-    local r, g, b = GetColorGradient(perc)
-    self.arrowTex:SetVertexColor(r, g, b, 1.0)
+    -- Dynamic colors: Green (<10 degrees), Yellow (<45 degrees), Red (>45 degrees)
+    -- Interpolate smoothly between states
+    local deviation = math.abs(relAngle)
+    local r, g, b
+    if deviation < 0.1745 then
+        -- Green
+        r, g, b = 0.1, 1.0, 0.1
+    elseif deviation < 0.7854 then
+        -- Interpolate Green to Yellow
+        local factor = (deviation - 0.1745) / (0.7854 - 0.1745)
+        r = 0.1 + 0.9 * factor
+        g = 1.0
+        b = 0.1
+    else
+        -- Interpolate Yellow to Red
+        local factor = (deviation - 0.7854) / (math.pi - 0.7854)
+        r = 1.0
+        g = 1.0 - 0.9 * factor
+        b = 0.1
+    end
     
-    -- Format distance and ETA next to it
+    -- Apply ADD blend mode for soft glow when approaching (<60 yards)
+    if dist < 60 then
+        self.arrowTex:SetBlendMode("ADD")
+        local glowAlpha = (1.0 - (dist / 60) * 0.6) * arrowAlpha
+        self.arrowTex:SetVertexColor(r, g, b, glowAlpha)
+    else
+        self.arrowTex:SetBlendMode("BLEND")
+        self.arrowTex:SetVertexColor(r, g, b, arrowAlpha)
+    end
+    
+    -- Format distance and ETA
     local etaText = ""
+    -- Only show ETA if we have positive speed (min threshold 0.5 yards/s)
     if CartoMapper.DB.GetOpt("waypointsShowETA") and smoothed_speed > 0.5 then
         local eta = dist / smoothed_speed
         if eta > 3600 then
