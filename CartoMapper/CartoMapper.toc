@@ -1,7 +1,7 @@
 ## Interface: 30300
 ## Title: CartoMapper
 ## Notes: Unified Map Enhancement Addon (clears fog of war, enables scrolling/zooming/panning, displays coordinates, colors group mates, and shows points of interest).
-## Author: Antigravity & Nathan
+## Author: Zendevve
 ## Version: 1.0.0
 ## SavedVariables: CartoMapperDB
 
