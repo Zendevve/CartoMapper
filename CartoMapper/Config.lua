@@ -22,7 +22,7 @@ function CartoMapper.CreateConfigFrame()
     if configFrame then return end
 
     configFrame = CreateFrame("Frame", "CartoMapperConfigFrame", UIParent)
-    configFrame:SetSize(520, 440)
+    configFrame:SetSize(520, 480)
     configFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 30)
     configFrame:SetFrameStrata("FULLSCREEN_DIALOG")
     configFrame:SetFrameLevel(20)
@@ -120,7 +120,7 @@ function CartoMapper.CreateConfigFrame()
 
     -- Sidebar background
     local sidebar = CreateFrame("Frame", nil, configFrame)
-    sidebar:SetSize(130, 360)
+    sidebar:SetSize(130, 400)
     sidebar:SetPoint("TOPLEFT", configFrame, "TOPLEFT", 10, -45)
     sidebar:SetBackdrop({
         bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
@@ -131,10 +131,21 @@ function CartoMapper.CreateConfigFrame()
     sidebar:SetBackdropColor(0, 0, 0, 0.5)
     sidebar:SetBackdropBorderColor(0.2, 0.2, 0.2, 0.8)
 
-    -- Main Content Area Panel Container
-    local contentArea = CreateFrame("Frame", nil, configFrame)
-    contentArea:SetSize(350, 320)
+    -- Main Content Area (ScrollFrame for overflow)
+    local contentArea = CreateFrame("ScrollFrame", nil, configFrame)
+    contentArea:SetSize(350, 360)
     contentArea:SetPoint("TOPLEFT", configFrame, "TOPLEFT", 150, -45)
+
+    local scrollChild = CreateFrame("Frame", nil, contentArea)
+    scrollChild:SetSize(350, 600)
+    contentArea:SetScrollChild(scrollChild)
+
+    contentArea:EnableMouseWheel(true)
+    contentArea:SetScript("OnMouseWheel", function(self, delta)
+        local maxScroll = math.max(0, scrollChild:GetHeight() - self:GetHeight())
+        local newScroll = math.max(0, math.min(self:GetVerticalScroll() - delta * 20, maxScroll))
+        self:SetVerticalScroll(newScroll)
+    end)
 
     -- List of tabs
     local tabNames = { "General", "Map Window", "Zoom / Pan", "Fog Clear", "POIs", "Battlefield", "Group Icons" }
@@ -143,6 +154,7 @@ function CartoMapper.CreateConfigFrame()
     -- Function to switch tabs
     local function SelectTab(index)
         activeTab = index
+        contentArea:SetVerticalScroll(0)
         for i, panel in ipairs(tabPanels) do
             if i == index then
                 panel:Show()
@@ -178,7 +190,7 @@ function CartoMapper.CreateConfigFrame()
         tabs[i] = btn
 
         -- Panel for this tab
-        local panel = CreateFrame("Frame", nil, contentArea)
+        local panel = CreateFrame("Frame", nil, scrollChild)
         panel:SetAllPoints()
         panel:Hide()
         tabPanels[i] = panel
