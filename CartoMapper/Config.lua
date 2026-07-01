@@ -283,7 +283,11 @@ function CartoMapper.CreateConfigFrame()
                 if CartoMapper.UpdateFogClearSettings then CartoMapper.UpdateFogClearSettings() end
             elseif key == "mapScale" then
                 if WorldMapFrame then
-                    WorldMapFrame:SetScale(value)
+                    local clamped = value
+                    if CartoMapper.ClampMapScale then
+                        clamped = CartoMapper.ClampMapScale(value)
+                    end
+                    WorldMapFrame:SetScale(clamped)
                     if CartoMapper.UpdateElementScales then CartoMapper.UpdateElementScales() end
                 end
             elseif key == "playerArrowSize" or key == "groupIconSize" then

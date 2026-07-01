@@ -247,6 +247,21 @@ function CartoMapper.UpdateElementScales()
     end
 end
 
+function CartoMapper.ClampMapScale(scale)
+    local screenW = GetScreenWidth()
+    local screenH = GetScreenHeight()
+    local mapW = WorldMapFrame:GetWidth() or 1026
+    local mapH = WorldMapFrame:GetHeight() or 732
+    local maxScaleX = screenW / mapW
+    local maxScaleY = screenH / mapH
+    local maxFitScale = math.min(maxScaleX, maxScaleY)
+    return math.max(0.5, math.min(scale, maxFitScale))
+end
+
+local function ClampMapScale(scale)
+    return CartoMapper.ClampMapScale(scale)
+end
+
 local function SetupWorldMapFrame()
     if not WorldMapScrollFrame then return end
     WorldMapScrollFrameScrollBar:Hide()
@@ -276,8 +291,9 @@ local function SetupWorldMapFrame()
             WorldMapTrackQuest:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 16, -9)
         end
 
+        WorldMapFrame:SetClampedToScreen(true)
         WorldMapFrame:SetPoint("TOPLEFT", WorldMapScreenAnchor or UIParent, 0, 0)
-        WorldMapFrame:SetScale(CartoMapper.DB.GetOpt("mapScale") or 1.0)
+        WorldMapFrame:SetScale(ClampMapScale(CartoMapper.DB.GetOpt("mapScale") or 1.0))
         WorldMapFrame:SetMovable("true")
         WorldMapTitleButton:Show()
         WorldMapTitleButton:ClearAllPoints()
@@ -316,7 +332,7 @@ local function SetupWorldMapFrame()
         if WorldMapFrame:IsShown() then
             local targetScale = 1.0
             if CartoMapper.DB.GetOpt("zoom") and CartoMapper.DB.GetOpt("rememberZoom") and GetCurrentMapZone() == PreviousState.zone then
-                targetScale = PreviousState.scale
+                targetScale = ClampMapScale(PreviousState.scale)
                 SetDetailFrameScale(targetScale)
                 WorldMapScrollFrame:SetHorizontalScroll(PreviousState.panX)
                 WorldMapScrollFrame:SetVerticalScroll(PreviousState.panY)
@@ -411,7 +427,7 @@ local function WorldMapScrollFrame_OnMouseWheel(self, delta)
         newScale = math.max(MINIMODE_MIN_ZOOM, newScale)
         newScale = math.min(MINIMODE_MAX_ZOOM, newScale)
 
-        WorldMapFrame:SetScale(newScale)
+        WorldMapFrame:SetScale(ClampMapScale(newScale))
         CartoMapper.DB.SetOpt("mapScale", newScale)
         if CartoMapperConfigFrame and CartoMapperConfigFrame:IsShown() then
             CartoMapperConfigFrame:UpdateAllValues()
@@ -871,8 +887,7 @@ function Zoom.Enable()
                         local newScale = (curDist / dragStartDist) * dragStartScale
                         
                         -- Clamp scale
-                        newScale = math.max(0.5, newScale)
-                        newScale = math.min(4.0, newScale)
+                        newScale = ClampMapScale(newScale)
                         
                         WorldMapFrame:SetScale(newScale)
                         CartoMapper.DB.SetOpt("mapScale", newScale)
