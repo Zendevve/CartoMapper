@@ -250,10 +250,23 @@ end
 function CartoMapper.ClampMapScale(scale)
     local screenW = GetScreenWidth()
     local screenH = GetScreenHeight()
+    -- Convert raw window pixel dimensions into the logical (UI) coordinate space
+    -- the map frame is sized in. GetScreenWidth/Height return physical pixels and
+    -- do not account for the player's UI scale, but the map frame's pixel size
+    -- *is* multiplied by UIParent's effective scale at render time. Without this
+    -- conversion, allowing scale <= screenW/mapW at high UI scale still lets the
+    -- map overflow off the screen edge ("map doesn't fit the window properly").
+    local uiScale = UIParent:GetEffectiveScale() or 1.0
+    local logicalW = screenW / uiScale
+    local logicalH = screenH / uiScale
     local mapW = WorldMapFrame:GetWidth() or 1026
     local mapH = WorldMapFrame:GetHeight() or 732
-    local maxScaleX = screenW / mapW
-    local maxScaleY = screenH / mapH
+    -- Small margin so the framed map isn't pressed against the screen edges; at
+    -- high UI scales rounding eats a few logical pixels and the WoW frame has
+    -- ~6px of title/border chrome around the scroll content.
+    local padding = 16
+    local maxScaleX = (logicalW - padding) / mapW
+    local maxScaleY = (logicalH - padding) / mapH
     local maxFitScale = math.min(maxScaleX, maxScaleY)
     return math.max(0.5, math.min(scale, maxFitScale))
 end
@@ -508,8 +521,10 @@ local function WorldMapButton_OnMouseUp(self, button)
         if scale and left and top and width and height then
             local x = (cursorX / scale - left) / width
             local y = (top - cursorY / scale) / height
-            if CartoMapper.AddWaypointAt then
-                CartoMapper.AddWaypointAt(x * 100, y * 100)
+            if x >= 0 and x <= 1 and y >= 0 and y <= 1 then
+                if CartoMapper.AddWaypointAt then
+                    CartoMapper.AddWaypointAt(x * 100, y * 100)
+                end
             end
         end
         return
@@ -1017,6 +1032,31 @@ function Zoom.Enable()
     modifierFrame:SetScript("OnEvent", function(self, event, key, state)
         if key == "LALT" or key == "RALT" then
             CartoMapper.UpdateClickThrough()
+        end
+    end)
+
+    -- Re-clamp the windowed map whenever the player's UI scale changes at runtime
+    -- (Interface Options -> Advanced -> UI Scale). The stored mapScale value was
+    -- chosen under the old UI scale and may no longer fit the screen after a change,
+    -- leaving the map sticking off the side of the window.
+    local uiScaleFrame = _G["CartoMapperUIScaleFrame"] or CreateFrame("Frame", "CartoMapperUIScaleFrame")
+    uiScaleFrame:RegisterEvent("UI_SCALE_CHANGED")
+    uiScaleFrame:SetScript("OnEvent", function(self, event)
+        if event == "UI_SCALE_CHANGED" then
+            local currentScale = CartoMapper.DB and CartoMapper.DB.GetOpt and CartoMapper.DB.GetOpt("mapScale") or 1.0
+            local newScale = CartoMapper.ClampMapScale(currentScale)
+            if WorldMapFrame and WorldMapFrame:IsShown() then
+                WorldMapFrame:SetScale(newScale)
+                if newScale ~= currentScale then
+                    CartoMapper.DB.SetOpt("mapScale", newScale)
+                    if CartoMapperConfigFrame and CartoMapperConfigFrame:IsShown() then
+                        CartoMapperConfigFrame:UpdateAllValues()
+                    end
+                end
+                if CartoMapper.UpdateElementScales then
+                    CartoMapper.UpdateElementScales()
+                end
+            end
         end
     end)
 
