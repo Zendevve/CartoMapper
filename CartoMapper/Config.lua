@@ -327,6 +327,7 @@ function CartoMapper.CreateConfigFrame()
     CreateCheckbox(panelGen, "Auto-Change Zone on Move", "autoChangeZones", "Automatically updates the map to your current zone when moving.", 15, -105, false)
     CreateCheckbox(panelGen, "Browse Instance Maps", "instanceMaps", "Allows viewing instance and battleground maps from the world map continent/zone menus.", 15, -135, true)
     CreateCheckbox(panelGen, "Show Coordinates", "coords", "Show cursor and player coordinates at the bottom of the map.", 15, -165, false)
+    CreateCheckbox(panelGen, "Show Player Speed & ETA", "coordsSpeed", "Append running speed (yd/s) to coordinates, plus ETA when a waypoint is active.", 15, -195, false)
     CreateSlider(panelGen, "Coordinates Accuracy", "coordsAccuracy", 0, 2, 1, "%.0f", "Sets the number of decimal places for map coordinates.", 15, -225, false)
 
     CreateCheckbox(panelGen, "Enable Waypoints System", "waypoints", "Enables Ctrl+Left Click to set waypoints and displays an on-screen navigation arrow.", 15, -285, false)

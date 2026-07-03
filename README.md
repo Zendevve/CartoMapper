@@ -14,7 +14,7 @@ CartoMapper replaces several heavy map addons with a single, lightweight, high-p
 | --- | --- |
 | **Fog of War Clear** | Reveals unexplored world map regions as removable or fully transparent overlays, with optional color tinting |
 | **Scroll-to-Zoom & Drag-to-Pan** | Smooth mousewheel zoom (up to 10x) with cursor-centered scaling and click-and-drag navigation |
-| **Coordinates** | Real-time cursor and player position coordinates at the bottom of the map |
+| **Coordinates** | Real-time cursor and player position coordinates at the bottom of the map, with optional player speed and waypoint ETA |
 | **Waypoints** | TomTom-style waypoint system with a navigation arrow, cross-zone routing, and automatic path gate management |
 | **Class-Colored Group Icons** | Party/raid members displayed with class colors, subgroup numbers, and pulsing visual indicators (dead, in combat, AFK) |
 | **Points of Interest** | Dungeon/raid portals, flight paths, spirit healers, clickable zone-crossing arrows, and extended flight masters for Northrend zones |
@@ -54,6 +54,7 @@ Available toggle options:
 
 - `zoom` — Scroll-to-zoom and drag-to-pan
 - `coords` — Cursor and player coordinates
+- `coordsSpeed` — Player speed and waypoint ETA readout
 - `battleMap` — Enhanced battlefield minimap
 - `groupIcons` — Class-colored group icons
 - `fogClear` — Fog of war reveal
@@ -175,7 +176,7 @@ CartoMapper was built by analyzing and integrating database/coordinate work from
 - **Magnify-WotLK** — Zoom/pan framework
 - **Leatrix Maps** — Coordinate system
 - **MozzFullWorldMap** — Fog reveal data
-- **Carbonite** (GPL) — Flight master coordinate dataset, used purely as static reference data
+- **Carbonite** (GPL) — Flight master coordinate dataset, used purely as static reference data; also referenced for player speed formula (yards per coordinate unit)
 
 ---
 
