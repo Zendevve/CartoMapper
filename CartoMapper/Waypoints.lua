@@ -38,6 +38,217 @@ local function GetDistanceInYards(x1, y1, x2, y2)
     return math.sqrt(dx*dx + dy*dy)
 end
 
+-- Absolute Zone Transitions and Cities Portal Database
+local zoneTransitions = {
+    -- Eastern Kingdoms:
+    ["Elwynn Forest"] = {
+        ["Westfall"] = { x = 0.5, y = 73.4 },
+        ["Duskwood"] = { x = 70.0, y = 92.0 },
+        ["Redridge Mountains"] = { x = 94.0, y = 72.0 },
+        ["Stormwind City"] = { x = 32.0, y = 50.0 },
+    },
+    ["Westfall"] = {
+        ["Elwynn Forest"] = { x = 95.0, y = 34.0 },
+        ["Duskwood"] = { x = 86.0, y = 47.0 },
+    },
+    ["Duskwood"] = {
+        ["Elwynn Forest"] = { x = 50.0, y = 14.0 },
+        ["Westfall"] = { x = 18.0, y = 32.0 },
+        ["Redridge Mountains"] = { x = 82.0, y = 30.0 },
+        ["Stranglethorn Vale"] = { x = 46.0, y = 87.0 },
+    },
+    ["Redridge Mountains"] = {
+        ["Elwynn Forest"] = { x = 16.0, y = 83.0 },
+        ["Duskwood"] = { x = 27.0, y = 87.0 },
+        ["Burning Steppes"] = { x = 35.0, y = 23.0 },
+    },
+    ["Burning Steppes"] = {
+        ["Redridge Mountains"] = { x = 80.0, y = 85.0 },
+        ["Searing Gorge"] = { x = 23.0, y = 25.0 },
+    },
+    ["Searing Gorge"] = {
+        ["Burning Steppes"] = { x = 35.0, y = 85.0 },
+        ["Badlands"] = { x = 85.0, y = 60.0 },
+    },
+    ["Badlands"] = {
+        ["Searing Gorge"] = { x = 15.0, y = 60.0 },
+        ["Loch Modan"] = { x = 45.0, y = 15.0 },
+    },
+    ["Loch Modan"] = {
+        ["Badlands"] = { x = 45.0, y = 85.0 },
+        ["Dun Morogh"] = { x = 18.0, y = 50.0 },
+        ["Wetlands"] = { x = 45.0, y = 10.0 },
+    },
+    ["Dun Morogh"] = {
+        ["Loch Modan"] = { x = 85.0, y = 45.0 },
+        ["Ironforge"] = { x = 62.0, y = 35.0 },
+    },
+    ["Wetlands"] = {
+        ["Loch Modan"] = { x = 45.0, y = 90.0 },
+        ["Arathi Highlands"] = { x = 50.0, y = 10.0 },
+    },
+    ["Arathi Highlands"] = {
+        ["Wetlands"] = { x = 50.0, y = 90.0 },
+        ["Hillsbrad Foothills"] = { x = 15.0, y = 45.0 },
+    },
+    ["Hillsbrad Foothills"] = {
+        ["Arathi Highlands"] = { x = 85.0, y = 45.0 },
+        ["The Hinterlands"] = { x = 85.0, y = 25.0 },
+        ["Silverpine Forest"] = { x = 15.0, y = 45.0 },
+        ["Alterac Mountains"] = { x = 45.0, y = 20.0 },
+    },
+    ["The Hinterlands"] = {
+        ["Hillsbrad Foothills"] = { x = 15.0, y = 75.0 },
+    },
+    ["Silverpine Forest"] = {
+        ["Hillsbrad Foothills"] = { x = 85.0, y = 45.0 },
+        ["Tirisfal Glades"] = { x = 45.0, y = 10.0 },
+        ["Ruins of Gilneas"] = { x = 45.0, y = 90.0 },
+    },
+    ["Tirisfal Glades"] = {
+        ["Silverpine Forest"] = { x = 45.0, y = 90.0 },
+        ["Western Plaguelands"] = { x = 85.0, y = 60.0 },
+        ["Undercity"] = { x = 60.0, y = 65.0 },
+    },
+    ["Western Plaguelands"] = {
+        ["Tirisfal Glades"] = { x = 15.0, y = 60.0 },
+        ["Eastern Plaguelands"] = { x = 85.0, y = 60.0 },
+    },
+    ["Eastern Plaguelands"] = {
+        ["Western Plaguelands"] = { x = 15.0, y = 60.0 },
+    },
+    ["Stranglethorn Vale"] = {
+        ["Duskwood"] = { x = 36.0, y = 8.0 },
+    },
+    
+    -- Major City Portals/Trams
+    ["Stormwind City"] = {
+        ["Ironforge"] = { x = 60.0, y = 60.0 },
+        ["Elwynn Forest"] = { x = 75.0, y = 75.0 },
+    },
+    ["Ironforge"] = {
+        ["Stormwind City"] = { x = 60.0, y = 60.0 },
+        ["Dun Morogh"] = { x = 50.0, y = 50.0 },
+    },
+    ["Undercity"] = {
+        ["Tirisfal Glades"] = { x = 50.0, y = 50.0 },
+    },
+
+    -- Kalimdor:
+    ["Durotar"] = {
+        ["Orgrimmar"] = { x = 45.0, y = 10.0 },
+        ["The Barrens"] = { x = 15.0, y = 45.0 },
+    },
+    ["Orgrimmar"] = {
+        ["Durotar"] = { x = 50.0, y = 80.0 },
+    },
+    ["The Barrens"] = {
+        ["Durotar"] = { x = 85.0, y = 45.0 },
+        ["Mulgore"] = { x = 45.0, y = 55.0 },
+        ["Stonetalon Mountains"] = { x = 45.0, y = 25.0 },
+        ["Ashenvale"] = { x = 50.0, y = 10.0 },
+        ["Thousand Needles"] = { x = 45.0, y = 90.0 },
+        ["Dustwallow Marsh"] = { x = 75.0, y = 65.0 },
+    },
+    ["Mulgore"] = {
+        ["The Barrens"] = { x = 85.0, y = 50.0 },
+        ["Thunder Bluff"] = { x = 45.0, y = 45.0 },
+    },
+    ["Thunder Bluff"] = {
+        ["Mulgore"] = { x = 50.0, y = 50.0 },
+    },
+    ["Ashenvale"] = {
+        ["The Barrens"] = { x = 50.0, y = 90.0 },
+        ["Stonetalon Mountains"] = { x = 35.0, y = 80.0 },
+        ["Darkshore"] = { x = 35.0, y = 15.0 },
+        ["Azshara"] = { x = 85.0, y = 60.0 },
+    },
+    ["Darkshore"] = {
+        ["Ashenvale"] = { x = 45.0, y = 90.0 },
+    },
+    ["Stonetalon Mountains"] = {
+        ["The Barrens"] = { x = 75.0, y = 80.0 },
+        ["Ashenvale"] = { x = 45.0, y = 20.0 },
+    },
+    ["Dustwallow Marsh"] = {
+        ["The Barrens"] = { x = 25.0, y = 35.0 },
+    },
+    ["Thousand Needles"] = {
+        ["The Barrens"] = { x = 45.0, y = 15.0 },
+        ["Tanaris"] = { x = 80.0, y = 85.0 },
+    },
+    ["Tanaris"] = {
+        ["Thousand Needles"] = { x = 15.0, y = 15.0 },
+        ["Un'Goro Crater"] = { x = 25.0, y = 45.0 },
+    },
+    ["Un'Goro Crater"] = {
+        ["Tanaris"] = { x = 85.0, y = 45.0 },
+        ["Silithus"] = { x = 15.0, y = 45.0 },
+    },
+    ["Silithus"] = {
+        ["Un'Goro Crater"] = { x = 85.0, y = 45.0 },
+    },
+}
+
+-- Case-Insensitive BFS Zone Pathfinder
+local function FindZonePath(startZone, endZone)
+    if not startZone or not endZone then return nil end
+    local s = string.lower(startZone)
+    local e = string.lower(endZone)
+    if s == e then
+        return { startZone }
+    end
+    
+    local queue = { { startZone } }
+    local visited = { [s] = true }
+    
+    while #queue > 0 do
+        local path = table.remove(queue, 1)
+        local current = path[#path]
+        local currentLower = string.lower(current)
+        
+        local connections = nil
+        for k, v in pairs(zoneTransitions) do
+            if string.lower(k) == currentLower then
+                connections = v
+                break
+            end
+        end
+        
+        if connections then
+            for neighbor, _ in pairs(connections) do
+                local nLower = string.lower(neighbor)
+                if nLower == e then
+                    local newPath = { unpack(path) }
+                    table.insert(newPath, neighbor)
+                    return newPath
+                elseif not visited[nLower] then
+                    visited[nLower] = true
+                    local newPath = { unpack(path) }
+                    table.insert(newPath, neighbor)
+                    table.insert(queue, newPath)
+                end
+            end
+        end
+    end
+    return nil
+end
+
+-- Track flying capabilities on player loading / continental requirements
+function Waypoints.CheckFlyingCapability()
+    local isCapable = false
+    local continent = GetCurrentMapContinent()
+    
+    if continent == 3 then -- Outland
+        isCapable = IsSpellKnown(34090) or IsSpellKnown(34091)
+    elseif continent == 4 then -- Northrend
+        isCapable = IsSpellKnown(54197)
+    end
+    
+    Waypoints.isFlyingCapable = isCapable
+    return isCapable
+end
+
 -- Builds a list of zone names to easily lookup ID and continent
 local function BuildZoneMap()
     if next(zoneMapList) then return end
@@ -115,6 +326,14 @@ function Waypoints.UpdateMapPins()
         if wp.zone == zName then
             local pin = Waypoints.GetPinFrame(pinIndex)
             pin.wp = wp
+            
+            if wp.isGate then
+                pin.texture:SetTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+                pin:SetSize(28, 28)
+            else
+                pin.texture:SetTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+                pin:SetSize(38, 38)
+            end
             
             local x = (wp.x / 100) * w
             local y = -(wp.y / 100) * h
@@ -262,13 +481,62 @@ local function Arrow_OnUpdate(self, elapsed)
     local zones = { GetMapZones(currentContinent) }
     local playerZoneName = zones[currentZone]
     
+    -- Auto-pruning of bypassed gates
+    if wp.isGate and playerZoneName then
+        local foundCurrentZoneGateIndex = nil
+        for i, w in ipairs(activeWaypoints) do
+            if w.zone == playerZoneName then
+                foundCurrentZoneGateIndex = i
+                break
+            end
+        end
+        
+        local foundTargetIndex = nil
+        for i, w in ipairs(activeWaypoints) do
+            if not w.isGate and w.zone == playerZoneName then
+                foundTargetIndex = i
+                break
+            end
+        end
+        
+        if foundTargetIndex then
+            -- Player reached the final zone! Remove all intermediate gates for this target
+            for i = foundTargetIndex - 1, 1, -1 do
+                local w = activeWaypoints[i]
+                if w.isGate then
+                    table.remove(activeWaypoints, i)
+                end
+            end
+            CartoMapper.DB.SetOpt("waypointsList", activeWaypoints)
+            last_px, last_py = nil, nil
+            smoothed_speed = 0
+            return
+        elseif foundCurrentZoneGateIndex and foundCurrentZoneGateIndex > 1 then
+            -- Player skipped ahead to a later gate in the queue!
+            -- Remove all preceding gates
+            for i = foundCurrentZoneGateIndex - 1, 1, -1 do
+                local w = activeWaypoints[i]
+                if w.isGate then
+                    table.remove(activeWaypoints, i)
+                end
+            end
+            CartoMapper.DB.SetOpt("waypointsList", activeWaypoints)
+            last_px, last_py = nil, nil
+            smoothed_speed = 0
+            return
+        end
+    end
+    
     if playerZoneName ~= wp.zone then
-        lastUpdate = 0
-        self.text:SetText(string.format("Go to:\n%s", wp.zone))
-        self.arrowTex:SetRotation(0)
-        self.arrowTex:SetVertexColor(0.6, 0.6, 0.6, 0.6)
-        last_px, last_py = nil, nil
-        return
+        -- If flying is capable, allow pointing directly to destination across zone boundaries
+        if not Waypoints.CheckFlyingCapability() then
+            lastUpdate = 0
+            self.text:SetText(string.format("Go to:\n%s", wp.zone))
+            self.arrowTex:SetRotation(0)
+            self.arrowTex:SetVertexColor(0.6, 0.6, 0.6, 0.6)
+            last_px, last_py = nil, nil
+            return
+        end
     end
     
     -- Reset tracking state on zone changes or target changes
@@ -515,6 +783,20 @@ function Waypoints.Enable()
         Waypoints.hookedPOI = true
     end
     
+    -- Initialize event listener for flying capability checks
+    if not Waypoints.eventFrame then
+        local f = CreateFrame("Frame")
+        f:RegisterEvent("PLAYER_ENTERING_WORLD")
+        f:RegisterEvent("SPELLS_CHANGED")
+        f:SetScript("OnEvent", function(self, event, ...)
+            if event == "PLAYER_ENTERING_WORLD" or event == "SPELLS_CHANGED" then
+                Waypoints.CheckFlyingCapability()
+            end
+        end)
+        Waypoints.eventFrame = f
+    end
+    Waypoints.CheckFlyingCapability()
+    
     -- Create HUD frame if there is an active waypoint
     local activeWp = Waypoints.GetActive()
     if activeWp then
@@ -534,6 +816,11 @@ function Waypoints.Disable()
     
     for _, pin in ipairs(pinPool) do
         pin:Hide()
+    end
+    
+    if Waypoints.eventFrame then
+        Waypoints.eventFrame:UnregisterAllEvents()
+        Waypoints.eventFrame = nil
     end
 end
 
@@ -619,14 +906,147 @@ function Waypoints.Add(wp, skipActivate)
         end
     end
     
-    table.insert(activeWaypoints, wp)
-    CartoMapper.DB.SetOpt("waypointsList", activeWaypoints)
+    if wp.isGate then
+        table.insert(activeWaypoints, wp)
+        CartoMapper.DB.SetOpt("waypointsList", activeWaypoints)
+        if not skipActivate then
+            Waypoints.SetActive(wp)
+        end
+        if WorldMapFrame and WorldMapFrame:IsShown() then
+            Waypoints.UpdateMapPins()
+        end
+        return
+    end
     
-    print(string.format("|cff00ff00[CartoMapper] Added waypoint: %s (%.1f, %.1f)%s|r", 
-        wp.zone, wp.x, wp.y, wp.desc and (" - " .. wp.desc) or ""))
+    -- Normal waypoint: split if cross-zone and not flying capable
+    SetMapToCurrentZone()
+    local c = GetCurrentMapContinent()
+    local z = GetCurrentMapZone()
+    local playerZoneName = nil
+    if c > 0 and z > 0 then
+        local zones = { GetMapZones(c) }
+        playerZoneName = zones[z]
+    end
     
-    if not skipActivate then
-        Waypoints.SetActive(wp)
+    local startZone = nil
+    if #activeWaypoints > 0 then
+        startZone = activeWaypoints[#activeWaypoints].zone
+    else
+        startZone = playerZoneName
+    end
+    
+    local splitList = {}
+    local path = nil
+    if startZone and wp.zone and startZone ~= wp.zone and not Waypoints.CheckFlyingCapability() then
+        path = FindZonePath(startZone, wp.zone)
+    end
+    
+    if path and #path > 1 then
+        -- Generate transition gate waypoints
+        for i = 1, #path - 1 do
+            local zoneA = path[i]
+            local zoneB = path[i+1]
+            
+            -- Find transition gate coordinates
+            local gate = nil
+            for k, v in pairs(zoneTransitions) do
+                if string.lower(k) == string.lower(zoneA) then
+                    for destZone, coords in pairs(v) do
+                        if string.lower(destZone) == string.lower(zoneB) then
+                            gate = coords
+                            break
+                        end
+                    end
+                end
+            end
+            
+            if gate then
+                local gateWp = {
+                    zone = zoneA,
+                    x = gate.x,
+                    y = gate.y,
+                    desc = "Gate to " .. zoneB,
+                    id = GetTime() .. "_gate_" .. i .. "_" .. math.random(1000),
+                    isGate = true,
+                    parentWpId = wp.id
+                }
+                table.insert(splitList, gateWp)
+            end
+        end
+        
+        -- Append the final target
+        table.insert(splitList, wp)
+        
+        -- Path Pruning Sweep 1: Proximity Prune (remove first gate if already standing next to it)
+        local px, py = GetPlayerMapPosition("player")
+        if px and px > 0 and py > 0 and #splitList > 1 and playerZoneName == splitList[1].zone then
+            local firstGate = splitList[1]
+            local distToGate = GetDistanceInYards(px, py, firstGate.x / 100, firstGate.y / 100)
+            local arrivalDist = CartoMapper.DB.GetOpt("waypointsArrivalDist") or 15
+            if distToGate < (arrivalDist + 20) then
+                table.remove(splitList, 1)
+            end
+        end
+        
+        -- Path Pruning Sweep 2: Direction-change prune (straighten path if any 3 consecutive nodes are linear)
+        local idx = 2
+        while idx < #splitList do
+            local p1 = splitList[idx-1]
+            local p2 = splitList[idx]
+            local p3 = splitList[idx+1]
+            
+            if p1.zone == p2.zone and p2.zone == p3.zone then
+                local dx1 = p2.x - p1.x
+                local dy1 = (p1.y - p2.y) * 1.5
+                local dx2 = p3.x - p2.x
+                local dy2 = (p2.y - p3.y) * 1.5
+                
+                local angle1 = math.atan2(dx1, dy1)
+                local angle2 = math.atan2(dx2, dy2)
+                local diff = math.abs(angle1 - angle2)
+                if diff > math.pi then
+                    diff = math.pi * 2 - diff
+                end
+                
+                -- Prune midpoint if direction change is less than 15 degrees (0.262 radians)
+                if diff < 0.262 then
+                    table.remove(splitList, idx)
+                else
+                    idx = idx + 1
+                end
+            else
+                idx = idx + 1
+            end
+        end
+        
+        -- Add remaining split waypoints to active list
+        local routeStr = ""
+        for _, item in ipairs(splitList) do
+            table.insert(activeWaypoints, item)
+            if item.isGate then
+                if routeStr == "" then
+                    routeStr = item.zone
+                end
+                routeStr = routeStr .. " -> " .. item.desc:sub(9)
+            end
+        end
+        
+        if routeStr ~= "" then
+            print(string.format("|cff00ff00[CartoMapper] Route generated: %s|r", routeStr))
+        end
+        
+        CartoMapper.DB.SetOpt("waypointsList", activeWaypoints)
+        
+        if not skipActivate and #splitList > 0 then
+            Waypoints.SetActive(splitList[1])
+        end
+    else
+        -- Same zone, flying capable, or no transition path found: add directly
+        table.insert(activeWaypoints, wp)
+        CartoMapper.DB.SetOpt("waypointsList", activeWaypoints)
+        if not skipActivate then
+            Waypoints.SetActive(wp)
+        end
     end
     
     if WorldMapFrame and WorldMapFrame:IsShown() then
@@ -636,6 +1056,16 @@ end
 
 function Waypoints.Remove(wp)
     local wasActive = wp.active
+    
+    -- Unconditionally remove associated gates if removing a parent waypoint
+    if not wp.isGate then
+        for i = #activeWaypoints, 1, -1 do
+            local w = activeWaypoints[i]
+            if w.isGate and w.parentWpId == wp.id then
+                table.remove(activeWaypoints, i)
+            end
+        end
+    end
     
     local index = nil
     for i, w in ipairs(activeWaypoints) do
@@ -658,7 +1088,7 @@ function Waypoints.Remove(wp)
             if closest then
                 Waypoints.SetActive(closest)
             else
-                Waypoints.SetActive(activeWaypoints[#activeWaypoints])
+                Waypoints.SetActive(activeWaypoints[1])
             end
         else
             if arrowFrame then arrowFrame:Hide() end
@@ -693,8 +1123,8 @@ function Waypoints.GetActive()
     end
     
     if #activeWaypoints > 0 then
-        activeWaypoints[#activeWaypoints].active = true
-        return activeWaypoints[#activeWaypoints]
+        activeWaypoints[1].active = true
+        return activeWaypoints[1]
     end
     return nil
 end

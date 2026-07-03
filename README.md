@@ -6,24 +6,22 @@
 
 ---
 
-## Overview
-
-CartoMapper replaces multiple heavy map addons (Mapster, Magnify-WotLK, Leatrix Maps, MozzFullWorldMap) with a single, lightweight, high-performance package. It clears fog of war, enables scroll-to-zoom and drag-to-pan, displays coordinates, colors group icons by class, shows points of interest, and enhances the battlefield minimap — all with zero frame-rate impact.
-
----
-
 ## Features
 
+CartoMapper replaces several heavy map addons with a single, lightweight, high-performance package. It combines fog clearing, scroll zooming, coordinate display, group icons, points of interest, waypoints, instance maps, and battlefield minimap enhancements into one unified experience.
+
 | Feature | Description |
-|---------|-------------|
-| **Fog of War Clear** | Reveals unexplored map regions as transparent overlays with customizable tint colors |
-| **Scroll-to-Zoom & Drag-to-Pan** | Smooth mouse-wheel zoom (up to 10x) with cursor-centered scaling and click-and-drag panning |
+| --- | --- |
+| **Fog of War Clear** | Reveals unexplored world map regions as removable or fully transparent overlays, with optional color tinting |
+| **Scroll-to-Zoom & Drag-to-Pan** | Smooth mousewheel zoom (up to 10x) with cursor-centered scaling and click-and-drag navigation |
 | **Coordinates** | Real-time cursor and player position coordinates at the bottom of the map |
-| **Class-Colored Group Icons** | Party/raid members displayed with class colors, subgroup numbers, and pulsing indicators (dead, combat, AFK) |
+| **Waypoints** | TomTom-style waypoint system with a navigation arrow, cross-zone routing, and automatic path gate management |
+| **Class-Colored Group Icons** | Party/raid members displayed with class colors, subgroup numbers, and pulsing visual indicators (dead, in combat, AFK) |
 | **Points of Interest** | Dungeon/raid portals, flight paths, spirit healers, and clickable zone-crossing arrows |
-| **Battlefield Minimap** | Enhanced Shift+M map with configurable size, opacity, unlock, and zoom |
-| **Zone Level Info** | Recommended level ranges and minimum fishing skill shown on zone tooltips |
-| **Borderless Windowed Map** | Hides default borders for a clean overlay; controls reappear on hover |
+| **Instance & Battleground Maps** | View dungeon, raid, and battleground maps offline from the continent/zone dropdowns |
+| **Battlefield Minimap** | Enhanced Shift+M map with configurable size, opacity, unlock, and zoom levels |
+| **Zone Level Info** | Recommended level ranges and minimum fishing skill shown on zone map tooltips |
+| **Borderless / Click-Through Map** | Hides default frame borders for a clean overlay; optional click-through mode; controls reappear on hover |
 | **Ctrl + Scroll Scaling** | Scale the windowed map frame size on the fly |
 | **Per-Character Settings** | Override global settings on a per-character basis |
 
@@ -40,15 +38,15 @@ CartoMapper replaces multiple heavy map addons (Mapster, Magnify-WotLK, Leatrix 
 4. Log in and type `/cm` to open the configuration panel.
 
 > [!NOTE]
-> The addon requires **WoW 3.3.5a (WotLK)**. It uses the `Interface: 30300` API.
+> CartoMapper targets **WoW 3.3.5a (Wrath of the Lich King)**. It requires the `Interface: 30300` API.
 
 ---
 
 ## Slash Commands
 
 | Command | Description |
-|---------|-------------|
-| `/cm` or `/cartomapper` | Toggle the configuration panel |
+| --- | --- |
+| `/cm` / `/cartomapper` | Toggle the configuration panel |
 | `/cm status` | Print the current state of all modules to chat |
 | `/cm toggle <option>` | Toggle a specific module on or off |
 
@@ -64,6 +62,16 @@ Available toggle options:
 - `minimapButton` — Minimap shortcut button
 
 Example: `/cm toggle fogclear`
+
+### Waypoints
+
+| Command | Description |
+| --- | --- |
+| `/way [x] [y] [desc]` | Add a waypoint in the current zone |
+| `/way [zone] [x] [y] [desc]` | Add a waypoint in a specific zone |
+| `/way clear` | Clear all active waypoints |
+| `/wayback` / `/wayb` | Bookmark your current position |
+| `/cway` / `/closestway` | Set the nearest waypoint as active |
 
 > [!TIP]
 > Some toggles require a `/reload` to take full effect. The configuration panel marks these with an asterisk (*).
@@ -115,6 +123,12 @@ Open with `/cm` or by clicking the minimap button. The panel has seven tabs:
 - Class-colored icons with subgroup numbers (1–8)
 - Visual states: dead (grey), in-combat (red), AFK (purple)
 
+### Waypoints
+- Enable/disable waypoint system
+- Arrival distance threshold
+- Arrow scale and alpha
+- Show estimated time of arrival (ETA)
+
 ---
 
 ## Per-Character Settings
@@ -128,7 +142,7 @@ CartoMapper supports per-character setting overrides. Enable the **Per-Character
 The addon is modular. Each feature is a separate Lua file that registers itself with the core:
 
 | Module | File | Description |
-|--------|------|-------------|
+| --- | --- | --- |
 | Core | `CartoMapper.lua` | Initialization, module loader, minimap button, slash commands |
 | Database | `DB.lua` | SavedVariables management, per-character profiles, migration |
 | Zone Info | `ZoneInfo.lua` | Zone level ranges, fishing skill data, town/city icon hiding |
@@ -138,7 +152,15 @@ The addon is modular. Each feature is a separate Lua file that registers itself 
 | Group Icons | `GroupIcons.lua` | Class-colored party/raid icons |
 | Zoom | `Zoom.lua` | Scroll-to-zoom, drag-to-pan, frame scaling |
 | POIs | `POIs.lua` | Points of interest database and rendering |
+| Instance Maps | `InstanceMaps.lua` | Offline dungeon, raid, and battleground map viewing |
+| Waypoints | `Waypoints.lua` | Navigation arrow, cross-zone routing, and path gates |
 | Config | `Config.lua` | Options panel GUI |
+
+---
+
+## Key Bindings
+
+You can bind the **Toggle Options Panel** command to a key in the game's Key Bindings menu, under the `CartoMapper` header.
 
 ---
 
