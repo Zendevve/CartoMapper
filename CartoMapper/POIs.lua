@@ -747,3 +747,43 @@ function CartoMapper.UpdatePOIs()
         POIs.Disable()
     end
 end
+
+-- Allow other modules to register additional POI rows for a specific zone.
+-- Entries follow the same shape as inline POIData rows.
+function POIs.RegisterZone(zoneKey, entries)
+    if type(zoneKey) ~= "string" or type(entries) ~= "table" then return end
+    POIData[zoneKey] = POIData[zoneKey] or {}
+    for _, row in ipairs(entries) do
+        tinsert(POIData[zoneKey], row)
+    end
+    if POIs.enabled then DrawPins() end
+end
+
+-- Remove specific rows that were registered by RegisterZone.  Matches by
+-- reference identity on the inner row table so callers can selectively
+-- remove their own additions without nuking other modules' data.
+function POIs.RemoveRows(zoneKey, rows)
+    if type(zoneKey) ~= "string" or not POIData[zoneKey] or type(rows) ~= "table" then return end
+    local bucket = POIData[zoneKey]
+    local removeSet = {}
+    for _, r in ipairs(rows) do removeSet[r] = true end
+    local kept = {}
+    for _, row in ipairs(bucket) do
+        if not removeSet[row] then
+            tinsert(kept, row)
+        end
+    end
+    if #kept == 0 then
+        POIData[zoneKey] = nil
+    else
+        POIData[zoneKey] = kept
+    end
+    if POIs.enabled then DrawPins() end
+end
+
+-- Remove rows previously registered by RegisterZone.  Best-effort: matches by
+-- reference identity on the inner row table.
+function POIs.UnregisterZone(zoneKey)
+    POIData[zoneKey] = nil
+    if POIs.enabled then DrawPins() end
+end

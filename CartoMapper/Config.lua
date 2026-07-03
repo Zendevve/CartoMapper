@@ -419,6 +419,7 @@ function CartoMapper.CreateConfigFrame()
     -- Tab 5: Points of Interest
     local panelPOIs = tabPanels[5]
     CreateCheckbox(panelPOIs, "Enable Points of Interest", "pois", "Draws flight paths, dungeons, spirit healers, and zone crossings.", 15, -15, false)
+    CreateCheckbox(panelPOIs, "Extended Flight Masters", "flightMasters", "Adds flight master pins for Northrend and other zones not pre-seeded.", 15, -45, true)
     
     local subLabel = panelPOIs:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     subLabel:SetPoint("TOPLEFT", panelPOIs, "TOPLEFT", 15, -55)

@@ -17,7 +17,7 @@ CartoMapper replaces several heavy map addons with a single, lightweight, high-p
 | **Coordinates** | Real-time cursor and player position coordinates at the bottom of the map |
 | **Waypoints** | TomTom-style waypoint system with a navigation arrow, cross-zone routing, and automatic path gate management |
 | **Class-Colored Group Icons** | Party/raid members displayed with class colors, subgroup numbers, and pulsing visual indicators (dead, in combat, AFK) |
-| **Points of Interest** | Dungeon/raid portals, flight paths, spirit healers, and clickable zone-crossing arrows |
+| **Points of Interest** | Dungeon/raid portals, flight paths, spirit healers, clickable zone-crossing arrows, and extended flight masters for Northrend zones |
 | **Instance & Battleground Maps** | View dungeon, raid, and battleground maps offline from the continent/zone dropdowns |
 | **Battlefield Minimap** | Enhanced Shift+M map with configurable size, opacity, unlock, and zoom levels |
 | **Zone Level Info** | Recommended level ranges and minimum fishing skill shown on zone map tooltips |
@@ -58,6 +58,7 @@ Available toggle options:
 - `groupIcons` — Class-colored group icons
 - `fogClear` — Fog of war reveal
 - `pois` — Points of interest
+- `flightMasters` — Extended flight master dataset for Northrend and other zones
 - `borderless` — Borderless windowed map
 - `minimapButton` — Minimap shortcut button
 
@@ -109,6 +110,7 @@ Open with `/cm` or by clicking the minimap button. The panel has seven tabs:
 
 ### Points of Interest
 - Master toggle for all POIs
+- Extended flight master dataset for Northrend zones (Borean Tundra, Howling Fjord, Dragonblight, Grizzly Hills, Zul'Drak, Sholazar Basin, Storm Peaks, Icecrown, Crystalsong Forest, Wintergrasp)
 - Individual filters: dungeons & raids, same-faction flights, opposing-faction flights, spirit healers, zone crossings
 
 ### Battlefield
@@ -152,6 +154,7 @@ The addon is modular. Each feature is a separate Lua file that registers itself 
 | Group Icons | `GroupIcons.lua` | Class-colored party/raid icons |
 | Zoom | `Zoom.lua` | Scroll-to-zoom, drag-to-pan, frame scaling |
 | POIs | `POIs.lua` | Points of interest database and rendering |
+| Flight Masters | `FlightMasters.lua` | Extended flight master data layer (Northrend and other zones; data sourced from Carbonite, GPL) |
 | Instance Maps | `InstanceMaps.lua` | Offline dungeon, raid, and battleground map viewing |
 | Waypoints | `Waypoints.lua` | Navigation arrow, cross-zone routing, and path gates |
 | Config | `Config.lua` | Options panel GUI |
@@ -172,6 +175,7 @@ CartoMapper was built by analyzing and integrating database/coordinate work from
 - **Magnify-WotLK** — Zoom/pan framework
 - **Leatrix Maps** — Coordinate system
 - **MozzFullWorldMap** — Fog reveal data
+- **Carbonite** (GPL) — Flight master coordinate dataset, used purely as static reference data
 
 ---
 

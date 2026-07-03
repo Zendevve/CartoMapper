@@ -16,5 +16,6 @@ FogClear.lua
 Zoom.lua
 POIs.lua
 InstanceMaps.lua
+FlightMasters.lua
 Config.lua
 Bindings.xml
