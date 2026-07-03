@@ -18,5 +18,6 @@ POIs.lua
 InstanceMaps.lua
 FlightMasters.lua
 TomTom.lua
+TransportRoutes.lua
 Config.lua
 Bindings.xml

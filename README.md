@@ -61,6 +61,7 @@ Available toggle options:
 - `fogClear` — Fog of war reveal
 - `pois` — Points of interest
 - `flightMasters` — Extended flight master dataset for Northrend and other zones
+- `transportRoutes` — Extended boat/zeppelin/portal pickup points (Northrend)
 - `borderless` — Borderless windowed map
 - `minimapButton` — Minimap shortcut button
 
@@ -160,6 +161,7 @@ The addon is modular. Each feature is a separate Lua file that registers itself 
 | Instance Maps | `InstanceMaps.lua` | Offline dungeon, raid, and battleground map viewing |
 | Waypoints | `Waypoints.lua` | Navigation arrow, cross-zone routing, and path gates |
 | TomTom Shim | `TomTom.lua` | Globals `TomTom` object with `AddZWaypoint`/`RemoveWaypoint`/etc. so third-party addons can hook CartoMapper without requiring real TomTom |
+| Transport Routes | `TransportRoutes.lua` | Northrend boat/zeppelin/portal pickup-point pins (data sourced from Carbonite, GPL) |
 | Config | `Config.lua` | Options panel GUI |
 
 ---
@@ -178,7 +180,7 @@ CartoMapper was built by analyzing and integrating database/coordinate work from
 - **Magnify-WotLK** — Zoom/pan framework
 - **Leatrix Maps** — Coordinate system
 - **MozzFullWorldMap** — Fog reveal data
-- **Carbonite** (GPL) — Flight master coordinate dataset, used purely as static reference data; also referenced for player speed formula (yards per coordinate unit)
+- **Carbonite** (GPL) — Flight master coordinate dataset, used purely as static reference data; also referenced for player speed formula (yards per coordinate unit) and Northrend transport pickup points
 
 ---
 
