@@ -21,6 +21,7 @@ CartoMapper replaces several heavy map addons with a single, lightweight, high-p
 | **Instance & Battleground Maps** | View dungeon, raid, and battleground maps offline from the continent/zone dropdowns |
 | **Battlefield Minimap** | Enhanced Shift+M map with configurable size, opacity, unlock, and zoom levels |
 | **Zone Level Info** | Recommended level ranges and minimum fishing skill shown on zone map tooltips |
+| **Compatibility** | Exposes a `TomTom` API shim (`TomTom.lua`) so third-party addons expecting TomTom can register waypoints through CartoMapper's native waypoint system, without forcing users to install the original TomTom |
 | **Borderless / Click-Through Map** | Hides default frame borders for a clean overlay; optional click-through mode; controls reappear on hover |
 | **Ctrl + Scroll Scaling** | Scale the windowed map frame size on the fly |
 | **Per-Character Settings** | Override global settings on a per-character basis |
@@ -158,6 +159,7 @@ The addon is modular. Each feature is a separate Lua file that registers itself 
 | Flight Masters | `FlightMasters.lua` | Extended flight master data layer (Northrend and other zones; data sourced from Carbonite, GPL) |
 | Instance Maps | `InstanceMaps.lua` | Offline dungeon, raid, and battleground map viewing |
 | Waypoints | `Waypoints.lua` | Navigation arrow, cross-zone routing, and path gates |
+| TomTom Shim | `TomTom.lua` | Globals `TomTom` object with `AddZWaypoint`/`RemoveWaypoint`/etc. so third-party addons can hook CartoMapper without requiring real TomTom |
 | Config | `Config.lua` | Options panel GUI |
 
 ---

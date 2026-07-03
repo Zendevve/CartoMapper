@@ -17,5 +17,6 @@ Zoom.lua
 POIs.lua
 InstanceMaps.lua
 FlightMasters.lua
+TomTom.lua
 Config.lua
 Bindings.xml
