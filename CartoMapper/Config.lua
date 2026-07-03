@@ -420,20 +420,20 @@ function CartoMapper.CreateConfigFrame()
     local panelPOIs = tabPanels[5]
     CreateCheckbox(panelPOIs, "Enable Points of Interest", "pois", "Draws flight paths, dungeons, spirit healers, and zone crossings.", 15, -15, false)
     CreateCheckbox(panelPOIs, "Extended Flight Masters", "flightMasters", "Adds flight master pins for Northrend and other zones not pre-seeded.", 15, -45, true)
-    
+
     local subLabel = panelPOIs:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    subLabel:SetPoint("TOPLEFT", panelPOIs, "TOPLEFT", 15, -55)
+    subLabel:SetPoint("TOPLEFT", panelPOIs, "TOPLEFT", 15, -85)
     subLabel:SetText("Granular Filters:")
     subLabel:SetTextColor(unpack(COLOR_CYAN))
 
     -- Add granular sub-options registry
     -- (defaults now registered by POIs.lua itself via POIs.defaults - see that file)
 
-    CreateCheckbox(panelPOIs, "Dungeons & Raids", "ShowDungeonIcons", "Draw dungeon and raid instance portal icons.", 25, -75, false)
-    CreateCheckbox(panelPOIs, "Same-Faction Flight Paths", "ShowTravelPoints", "Show flight masters, boats, and zeppelins of your faction.", 25, -105, false)
-    CreateCheckbox(panelPOIs, "Opposing-Faction Flight Paths", "ShowTravelOpposing", "Show flight masters of the enemy faction.", 25, -135, false)
-    CreateCheckbox(panelPOIs, "Spirit Healers", "ShowSpiritHealers", "Draw spirit healers on the map.", 25, -165, false)
-    CreateCheckbox(panelPOIs, "Zone Crossings", "ShowZoneCrossings", "Draw clickable arrows at zone transitions to jump map.", 25, -195, false)
+    CreateCheckbox(panelPOIs, "Dungeons & Raids", "ShowDungeonIcons", "Draw dungeon and raid instance portal icons.", 25, -105, false)
+    CreateCheckbox(panelPOIs, "Same-Faction Flight Paths", "ShowTravelPoints", "Show flight masters, boats, and zeppelins of your faction.", 25, -135, false)
+    CreateCheckbox(panelPOIs, "Opposing-Faction Flight Paths", "ShowTravelOpposing", "Show flight masters of the enemy faction.", 25, -165, false)
+    CreateCheckbox(panelPOIs, "Spirit Healers", "ShowSpiritHealers", "Draw spirit healers on the map.", 25, -195, false)
+    CreateCheckbox(panelPOIs, "Zone Crossings", "ShowZoneCrossings", "Draw clickable arrows at zone transitions to jump map.", 25, -225, false)
 
     -- Tab 6: Battlefield Minimap
     local panelBattle = tabPanels[6]
