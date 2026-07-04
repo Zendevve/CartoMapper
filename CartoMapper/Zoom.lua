@@ -114,6 +114,39 @@ local function UpdateDetailTilesVisibility()
     end
 end
 
+-- Resize quest POI buttons so they do not drift or scale awkwardly.
+-- Defined BEFORE SetDetailFrameScale (which references it) because Lua captures
+-- upvalues at function-definition time. A `local function name()` declared later
+-- would shadow any earlier `local name` and would NOT rebind the forward-declared
+-- local; the call site would resolve to nil. Keeping the def above the caller
+-- guarantees the upvalue binds to the real function.
+local function ResizeQuestPOIs()
+    local QUEST_POI_MAX_TYPES = 4
+    local POI_TYPE_MAX_BUTTONS = 25
+    local scale = WorldMapDetailFrame:GetScale()
+
+    local function resizePOI(poiButton)
+        if not poiButton then return end
+        local _, _, _, x, y = poiButton:GetPoint()
+        if x and y then
+            local s = WORLDMAP_SETTINGS.size / WorldMapDetailFrame:GetEffectiveScale()
+            local posX = x * 1 / s
+            local posY = y * 1 / s
+            poiButton:SetScale(s)
+            poiButton:SetPoint("CENTER", poiButton:GetParent(), "TOPLEFT", posX, posY)
+        end
+    end
+
+    for i = 1, QUEST_POI_MAX_TYPES do
+        for j = 1, POI_TYPE_MAX_BUTTONS do
+            resizePOI(_G["poiWorldMapPOIFrame" .. i .. "_" .. j])
+        end
+    end
+    if QUEST_POI_SWAP_BUTTONS then
+        resizePOI(QUEST_POI_SWAP_BUTTONS["WorldMapPOIFrame"])
+    end
+end
+
 local function SetDetailFrameScale(scale)
     WorldMapDetailFrame:SetScale(scale)
     if WorldMapScrollFrame then
@@ -165,7 +198,32 @@ local function SetDetailFrameScale(scale)
         end
     end
 
-    WorldMapFrame_OnEvent(WorldMapFrame, "DISPLAY_SIZE_CHANGED")
+    -- Refresh Blizzard quest POIs so the buttons are recreated with canonical
+    -- offsets, then our hooksecurefunc on WorldMapFrame_UpdateQuests re-applies
+    -- the scale-aware POI resize. We call Blizzard's WorldMapFrame_UpdateQuests
+    -- directly -- but wrapped in pcall, since WotLK QuestPOI_HideButtons has no
+    -- nil-guard and crashes when a quest POI of a given buttonType hasn't been
+    -- created for the current zone. Previously this fired "DISPLAY_SIZE_CHANGED"
+    -- on WorldMapFrame_OnEvent, which forced the same call chain but ALSO re-ran
+    -- WorldMapFrame_UpdateMapHighlight -- CartoMapper already refreshes the
+    -- highlight every frame in its own WorldMapButton_OnUpdate, so we can skip
+    -- the heavyweight event dispatch.
+    --
+    -- On the success path, our hooksecurefunc("WorldMapFrame_UpdateQuests",
+    -- ResizeQuestPOIs) already fires and re-anchors the POI buttons -- do NOT
+    -- call ResizeQuestPOIs again here, that would compound the 1/s rescale and
+    -- drift the markers further on every zoom tick.
+    --
+    -- On the failure path, the hooksecurefunc chain never fires (the original
+    -- never returned normally), so we explicitly run ResizeQuestPOIs ourselves.
+    -- In the typical WotLK crash scenario only QuestPOI_HideButtons(4) errors
+    -- because buttonType=4 has zero buttons to hide; types 1..3 already
+    -- completed, so the surviving POI buttons are still in canonical positions
+    -- and ResizeQuestPOIs can safely re-anchor them for the new scale.
+    local ok = pcall(WorldMapFrame_UpdateQuests)
+    if not ok then
+        ResizeQuestPOIs()
+    end
 end
 
 local function PersistMapScrollAndPan()
@@ -180,34 +238,6 @@ local function AfterScrollOrPan()
     if WORLDMAP_SETTINGS.selectedQuest and WorldMapBlobFrame.DrawQuestBlob then
         WorldMapBlobFrame:DrawQuestBlob(WORLDMAP_SETTINGS.selectedQuestId, false)
         WorldMapBlobFrame:DrawQuestBlob(WORLDMAP_SETTINGS.selectedQuestId, true)
-    end
-end
-
--- Resize quest POI buttons so they do not drift or scale awkwardly
-local function ResizeQuestPOIs()
-    local QUEST_POI_MAX_TYPES = 4
-    local POI_TYPE_MAX_BUTTONS = 25
-    local scale = WorldMapDetailFrame:GetScale()
-
-    local function resizePOI(poiButton)
-        if not poiButton then return end
-        local _, _, _, x, y = poiButton:GetPoint()
-        if x and y then
-            local s = WORLDMAP_SETTINGS.size / WorldMapDetailFrame:GetEffectiveScale()
-            local posX = x * 1 / s
-            local posY = y * 1 / s
-            poiButton:SetScale(s)
-            poiButton:SetPoint("CENTER", poiButton:GetParent(), "TOPLEFT", posX, posY)
-        end
-    end
-
-    for i = 1, QUEST_POI_MAX_TYPES do
-        for j = 1, POI_TYPE_MAX_BUTTONS do
-            resizePOI(_G["poiWorldMapPOIFrame" .. i .. "_" .. j])
-        end
-    end
-    if QUEST_POI_SWAP_BUTTONS then
-        resizePOI(QUEST_POI_SWAP_BUTTONS["WorldMapPOIFrame"])
     end
 end
 
