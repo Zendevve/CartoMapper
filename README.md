@@ -184,8 +184,29 @@ CartoMapper was built by analyzing and integrating database/coordinate work from
 
 ---
 
-## Support
+## Support the Project
 
-If CartoMapper improves your experience, consider supporting development:
+If CartoMapper makes your WoW experience better and saves you time, please consider buying me a coffee to support its ongoing development!
 
 **[Buy Me A Coffee](https://buymeacoffee.com/zendevve)**
+
+Your support is highly appreciated and directly helps keep the addon updated, optimized, and packed with new features. Thank you!
+
+---
+
+## License
+
+This project is published under a proprietary Copyright Notice and Limited Personal Use license (c) 2026 Zendevve. All rights reserved.
+
+**Permitted:**
+- Download, study, fork, and install for personal, non-commercial use within World of Warcraft.
+- Any copying is permitted only as technically necessary for downloading, viewing, forking, installing, backing up, or using the software as distributed by the copyright holder.
+
+**Not permitted without prior written permission:**
+- Modify, rename, redistribute, re-upload, bundle, or incorporate source code or assets into other projects.
+- Sell, sublicense, or include in commercial offerings.
+- Remove copyright notices or claim authorship.
+
+*Forking is permitted only for personal viewing, study, backup, or installation. Forks may not be modified, redistributed, or published as derivative works without prior written permission.*
+
+For full terms, read the [LICENSE](file:///d:/COMPROG/cartomapper/LICENSE) file at the root of the repository.
