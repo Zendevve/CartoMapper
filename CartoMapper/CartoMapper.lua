@@ -298,3 +298,15 @@ end
 SLASH_CARTOMAPPER1 = "/cartomapper"
 SLASH_CARTOMAPPER2 = "/cm"
 SlashCmdList["CARTOMAPPER"] = SlashHandler
+
+-- Support reminder printed on map opening (rate-limited to once every 15 minutes)
+local lastDonateMessageTime = 0
+if WorldMapFrame then
+    WorldMapFrame:HookScript("OnShow", function()
+        local now = GetTime()
+        if now - lastDonateMessageTime > 900 then -- 900 seconds = 15 minutes
+            lastDonateMessageTime = now
+            DEFAULT_CHAT_FRAME:AddMessage("|cff00ffb0[CartoMapper]|r: Like this addon? Support development at |cffffd700buymeacoffee.com/zendevve|r ☕")
+        end
+    end)
+end
