@@ -574,14 +574,18 @@ local function Arrow_OnUpdate(self, elapsed)
     -- Skip auto-clear if player is on a taxi/flight path
     local arrivalDist = CartoMapper.DB.GetOpt("waypointsArrivalDist") or 15
     if dist < arrivalDist and not UnitOnTaxi("player") then
-        lastUpdate = 0
-        if CartoMapper.DB.GetOpt("arrivalSound") then
-            PlaySoundFile("Sound\\Interface\\LevelUp.wav")
+        if wp.isCorpse and not UnitIsGhost("player") then
+            -- Skip clearing it since they haven't released their spirit (are not a ghost) yet
+        else
+            lastUpdate = 0
+            if CartoMapper.DB.GetOpt("arrivalSound") then
+                PlaySoundFile("Sound\\Interface\\LevelUp.wav")
+            end
+            UIErrorsFrame:AddMessage("Waypoint Reached!", 0.1, 1.0, 0.1, 1.0, 5)
+            print("|cff00ff00[CartoMapper] Reached Waypoint: " .. (wp.desc or string.format("%.1f, %.1f", wp.x, wp.y)) .. "|r")
+            Waypoints.Remove(wp)
+            return
         end
-        UIErrorsFrame:AddMessage("Waypoint Reached!", 0.1, 1.0, 0.1, 1.0, 5)
-        print("|cff00ff00[CartoMapper] Reached Waypoint: " .. (wp.desc or string.format("%.1f, %.1f", wp.x, wp.y)) .. "|r")
-        Waypoints.Remove(wp)
-        return
     end
     
     lastUpdate = 0
