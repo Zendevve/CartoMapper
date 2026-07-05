@@ -58,9 +58,6 @@ function DB.Initialize()
     end
 
     -- Migrate old default Blue/Emerald tint to Normal style if present.
-    -- Gated by version so this only ever runs once, on the upgrade that introduced it,
-    -- rather than re-checking every login (which could also misfire if someone
-    -- deliberately picked these exact custom color values later).
     local dbVersion = CartoMapperDB.v or 1
     if dbVersion < 2 then
         if CartoMapperDB.global.fogColorStyle == 0 and CartoMapperDB.global.fogR == 0.2 and CartoMapperDB.global.fogG == 0.6 and CartoMapperDB.global.fogB == 1.0 then
@@ -70,6 +67,15 @@ function DB.Initialize()
     end
 
     CartoMapperDB.v = 2
+
+    -- Migrate global waypointsList to per-character if present in global
+    if CartoMapperDB.global and CartoMapperDB.global.waypointsList then
+        CartoMapperDB.char[charName] = CartoMapperDB.char[charName] or {}
+        if CartoMapperDB.char[charName].waypointsList == nil then
+            CartoMapperDB.char[charName].waypointsList = CartoMapperDB.global.waypointsList
+        end
+        CartoMapperDB.global.waypointsList = nil
+    end
 
     -- Fill in missing global defaults
     for k, v in pairs(defaultsRegistry) do
@@ -95,20 +101,31 @@ function DB.SetCharActive(active)
             CartoMapperDB.char[key] = {}
         end
         for k, v in pairs(CartoMapperDB.global) do
-            if CartoMapperDB.char[key][k] == nil then
+            if CartoMapperDB.char[key][k] == nil and k ~= "waypointsList" then
                 CartoMapperDB.char[key][k] = v
             end
         end
     else
         CartoMapperDB.charActive[key] = nil
-        -- Optional: clean up character table
-        CartoMapperDB.char[key] = nil
+        -- Clean up character table except waypointsList
+        if CartoMapperDB.char[key] then
+            local wpList = CartoMapperDB.char[key].waypointsList
+            CartoMapperDB.char[key] = {}
+            CartoMapperDB.char[key].waypointsList = wpList
+        end
     end
 end
 
 -- Get option value (checks character active overrides first)
 function DB.GetOpt(key)
     local cKey = GetCharKey()
+    if key == "waypointsList" then
+        if CartoMapperDB.char and CartoMapperDB.char[cKey] and CartoMapperDB.char[cKey][key] ~= nil then
+            return CartoMapperDB.char[cKey][key]
+        end
+        return defaultsRegistry[key]
+    end
+
     if CartoMapperDB.charActive and CartoMapperDB.charActive[cKey] and CartoMapperDB.char and CartoMapperDB.char[cKey] and CartoMapperDB.char[cKey][key] ~= nil then
         return CartoMapperDB.char[cKey][key]
     end
@@ -121,6 +138,13 @@ end
 -- Set option value
 function DB.SetOpt(key, value)
     local cKey = GetCharKey()
+    if key == "waypointsList" then
+        CartoMapperDB.char = CartoMapperDB.char or {}
+        CartoMapperDB.char[cKey] = CartoMapperDB.char[cKey] or {}
+        CartoMapperDB.char[cKey][key] = value
+        return
+    end
+
     if CartoMapperDB.charActive and CartoMapperDB.charActive[cKey] then
         CartoMapperDB.char[cKey] = CartoMapperDB.char[cKey] or {}
         CartoMapperDB.char[cKey][key] = value
