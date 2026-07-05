@@ -15,6 +15,8 @@ Waypoints.defaults = {
     waypointsArrowScale = 1.0,
     waypointsArrowAlpha = 1.0,
     waypointsShowETA = true,
+    corpseTracker = true,
+    arrivalSound = true,
 }
 
 -- Internal state
@@ -573,7 +575,9 @@ local function Arrow_OnUpdate(self, elapsed)
     local arrivalDist = CartoMapper.DB.GetOpt("waypointsArrivalDist") or 15
     if dist < arrivalDist and not UnitOnTaxi("player") then
         lastUpdate = 0
-        PlaySoundFile("Sound\\Interface\\LevelUp.wav")
+        if CartoMapper.DB.GetOpt("arrivalSound") then
+            PlaySoundFile("Sound\\Interface\\LevelUp.wav")
+        end
         UIErrorsFrame:AddMessage("Waypoint Reached!", 0.1, 1.0, 0.1, 1.0, 5)
         print("|cff00ff00[CartoMapper] Reached Waypoint: " .. (wp.desc or string.format("%.1f, %.1f", wp.x, wp.y)) .. "|r")
         Waypoints.Remove(wp)
@@ -680,6 +684,62 @@ local function SetClosestWaypoint()
     return closestWp
 end
 
+-- Dropdown Menu for Arrow Right-Click Actions
+local arrowMenuFrame
+function Waypoints.OpenArrowMenu()
+    if not arrowMenuFrame then
+        arrowMenuFrame = CreateFrame("Frame", "CartoMapper_ArrowMenuFrame", UIParent, "UIDropDownMenuTemplate")
+    end
+    
+    local menuTable = {
+        {
+            text = "CartoMapper Navigation HUD",
+            isTitle = true,
+            notCheckable = true,
+        },
+        {
+            text = "Clear Active Waypoint",
+            notCheckable = true,
+            func = function()
+                local active = Waypoints.GetActive()
+                if active then
+                    Waypoints.Remove(active)
+                end
+            end
+        },
+        {
+            text = "Clear All Waypoints",
+            notCheckable = true,
+            func = function()
+                Waypoints.ClearAll()
+            end
+        },
+        {
+            text = "Lock HUD Arrow",
+            checked = function() return CartoMapper.DB.GetOpt("lockMap") end,
+            func = function()
+                local val = CartoMapper.DB.GetOpt("lockMap")
+                CartoMapper.DB.SetOpt("lockMap", not val)
+            end
+        },
+        {
+            text = "Show ETA Display",
+            checked = function() return CartoMapper.DB.GetOpt("waypointsShowETA") end,
+            func = function()
+                local val = CartoMapper.DB.GetOpt("waypointsShowETA")
+                CartoMapper.DB.SetOpt("waypointsShowETA", not val)
+            end
+        },
+        {
+            text = "Close Menu",
+            notCheckable = true,
+            func = function() end
+        }
+    }
+    
+    EasyMenu(menuTable, arrowMenuFrame, "cursor", 0, 0, "MENU")
+end
+
 -- Create the arrow frame
 local function CreateArrowFrame()
     if arrowFrame then return end
@@ -711,6 +771,11 @@ local function CreateArrowFrame()
         local bottom = self:GetBottom()
         CartoMapper.DB.SetOpt("waypointsArrowX", left)
         CartoMapper.DB.SetOpt("waypointsArrowY", bottom)
+    end)
+    arrowFrame:SetScript("OnMouseDown", function(self, button)
+        if button == "RightButton" then
+            Waypoints.OpenArrowMenu()
+        end
     end)
     
     -- Add circular background backing
@@ -783,14 +848,81 @@ function Waypoints.Enable()
         Waypoints.hookedPOI = true
     end
     
-    -- Initialize event listener for flying capability checks
+    -- Initialize event listener for flying capability and death/corpse checks
     if not Waypoints.eventFrame then
         local f = CreateFrame("Frame")
         f:RegisterEvent("PLAYER_ENTERING_WORLD")
         f:RegisterEvent("SPELLS_CHANGED")
+        f:RegisterEvent("PLAYER_DEAD")
+        f:RegisterEvent("PLAYER_ALIVE")
+        f:RegisterEvent("PLAYER_UNGHOST")
         f:SetScript("OnEvent", function(self, event, ...)
             if event == "PLAYER_ENTERING_WORLD" or event == "SPELLS_CHANGED" then
                 Waypoints.CheckFlyingCapability()
+            elseif event == "PLAYER_DEAD" then
+                if CartoMapper.DB.GetOpt("corpseTracker") then
+                    SetMapToCurrentZone()
+                    local c = GetCurrentMapContinent()
+                    local z = GetCurrentMapZone()
+                    local zoneName = nil
+                    if c > 0 and z > 0 then
+                        local zones = { GetMapZones(c) }
+                        zoneName = zones[z]
+                    end
+                    
+                    local cx, cy = GetCorpseMapPosition()
+                    if not cx or cx == 0 or cy == 0 then
+                        cx, cy = GetPlayerMapPosition("player")
+                    end
+                    
+                    if cx and cx > 0 and cy and cy > 0 and zoneName then
+                        -- Remove existing corpse waypoints first
+                        for i = #activeWaypoints, 1, -1 do
+                            local w = activeWaypoints[i]
+                            if w.isCorpse then
+                                table.remove(activeWaypoints, i)
+                            end
+                        end
+                        
+                        local corpseWp = {
+                            zone = zoneName,
+                            x = cx * 100,
+                            y = cy * 100,
+                            desc = "My Corpse",
+                            id = GetTime() .. "_corpse_" .. math.random(1000),
+                            isCorpse = true
+                        }
+                        
+                        table.insert(activeWaypoints, corpseWp)
+                        CartoMapper.DB.SetOpt("waypointsList", activeWaypoints)
+                        Waypoints.SetActive(corpseWp)
+                        if WorldMapFrame and WorldMapFrame:IsShown() then
+                            Waypoints.UpdateMapPins()
+                        end
+                        print("|cff00ff00[CartoMapper] Corpse waypoint set! Arrow is guiding you to your body.|r")
+                    end
+                end
+            elseif event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" then
+                local found = false
+                for i = #activeWaypoints, 1, -1 do
+                    local w = activeWaypoints[i]
+                    if w.isCorpse then
+                        table.remove(activeWaypoints, i)
+                        found = true
+                    end
+                end
+                if found then
+                    CartoMapper.DB.SetOpt("waypointsList", activeWaypoints)
+                    local active = Waypoints.GetActive()
+                    if active then
+                        Waypoints.SetActive(active)
+                    else
+                        if arrowFrame then arrowFrame:Hide() end
+                    end
+                    if WorldMapFrame and WorldMapFrame:IsShown() then
+                        Waypoints.UpdateMapPins()
+                    end
+                end
             end
         end)
         Waypoints.eventFrame = f
@@ -1198,4 +1330,114 @@ function Waypoints.WayBack()
     
     Waypoints.Add(wp, true) -- skipActivate: don't point arrow at the spot we're standing on
     print("|cff00ff00[CartoMapper] Position bookmarked. Use /way to navigate back later.|r")
+end
+
+-- Direct Chat Coordinate Detection (Social Integration)
+local function ParseAndHyperlinkCoords(msg)
+    if not msg then return nil end
+    if not CartoMapper.DB.GetOpt("waypoints") then return msg end
+    
+    local result = msg
+    local startPos = 1
+    
+    while true do
+        local startIdx, endIdx, xStr, yStr = string.find(result, "(%d+%.?%d*)%s*[,%s]%s*(%d+%.?%d*)", startPos)
+        if not startIdx then break end
+        
+        local x = tonumber(xStr)
+        local y = tonumber(yStr)
+        
+        -- Validate coordinates range (0 to 100)
+        if x and y and x >= 0 and x <= 100 and y >= 0 and y <= 100 then
+            local coordsText = string.sub(result, startIdx, endIdx)
+            local link = string.format("|Hcmway:%s:%s|h|cff00ff00[%s]|h|r", xStr, yStr, coordsText)
+            result = string.sub(result, 1, startIdx - 1) .. link .. string.sub(result, endIdx + 1)
+            startPos = startIdx + string.len(link)
+        else
+            startPos = endIdx + 1
+        end
+    end
+    return result
+end
+
+local channels = {
+    "CHAT_MSG_SAY",
+    "CHAT_MSG_YELL",
+    "CHAT_MSG_WHISPER",
+    "CHAT_MSG_WHISPER_INFORM",
+    "CHAT_MSG_PARTY",
+    "CHAT_MSG_PARTY_LEADER",
+    "CHAT_MSG_RAID",
+    "CHAT_MSG_RAID_LEADER",
+    "CHAT_MSG_GUILD",
+    "CHAT_MSG_OFFICER",
+    "CHAT_MSG_BATTLEGROUND",
+    "CHAT_MSG_BATTLEGROUND_LEADER",
+    "CHAT_MSG_CHANNEL"
+}
+
+local function ChatFilter(self, event, msg, ...)
+    local newMsg = ParseAndHyperlinkCoords(msg)
+    return false, newMsg, ...
+end
+
+for _, chan in ipairs(channels) do
+    ChatFrame_AddMessageEventFilter(chan, ChatFilter)
+end
+
+-- Hyperlink Click Interceptor
+local origSetItemRef = SetItemRef
+function SetItemRef(link, text, button, chatFrame)
+    if link:sub(1, 5) == "cmway" then
+        local _, xStr, yStr = string.split(":", link)
+        local x = tonumber(xStr)
+        local y = tonumber(yStr)
+        if x and y then
+            SetMapToCurrentZone()
+            local c = GetCurrentMapContinent()
+            local z = GetCurrentMapZone()
+            local zoneName = nil
+            if c > 0 and z > 0 then
+                local zones = { GetMapZones(c) }
+                zoneName = zones[z]
+            end
+            
+            if zoneName then
+                local wp = {
+                    zone = zoneName,
+                    x = x,
+                    y = y,
+                    desc = "Chat Link Waypoint",
+                    id = GetTime() .. "_" .. math.random(1000)
+                }
+                Waypoints.Add(wp)
+            else
+                print("|cffff0000[CartoMapper] Could not determine current zone to add chat waypoint.|r")
+            end
+        end
+        return
+    end
+    return origSetItemRef(link, text, button, chatFrame)
+end
+
+-- Offline Dungeon Floor Quick-Cycling
+if WorldMapFrame then
+    WorldMapFrame:HookScript("OnKeyDown", function(self, key)
+        if not WorldMapFrame:IsShown() then return end
+        if key == "PAGEUP" or key == "PAGEDOWN" then
+            local numFloors = GetNumDungeonMapLevels()
+            if numFloors and numFloors > 1 then
+                local currentFloor = GetCurrentMapDungeonLevel()
+                local newFloor = currentFloor
+                if key == "PAGEUP" then
+                    newFloor = currentFloor + 1
+                    if newFloor > numFloors then newFloor = 1 end
+                else
+                    newFloor = currentFloor - 1
+                    if newFloor < 1 then newFloor = numFloors end
+                end
+                SetDungeonMapLevel(newFloor)
+            end
+        end
+    end)
 end

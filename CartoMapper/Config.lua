@@ -137,7 +137,7 @@ function CartoMapper.CreateConfigFrame()
     contentArea:SetPoint("TOPLEFT", configFrame, "TOPLEFT", 150, -45)
 
     local scrollChild = CreateFrame("Frame", nil, contentArea)
-    scrollChild:SetSize(350, 600)
+    scrollChild:SetSize(350, 700)
     contentArea:SetScrollChild(scrollChild)
 
     contentArea:EnableMouseWheel(true)
@@ -332,13 +332,15 @@ function CartoMapper.CreateConfigFrame()
 
     CreateCheckbox(panelGen, "Enable Waypoints System", "waypoints", "Enables Ctrl+Left Click to set waypoints and displays an on-screen navigation arrow.", 15, -285, false)
     CreateCheckbox(panelGen, "Show Time-to-Arrival (ETA)", "waypointsShowETA", "Shows the estimated travel time next to the distance display on the navigation arrow.", 15, -315, false)
-    CreateSlider(panelGen, "Arrival Distance (yards)", "waypointsArrivalDist", 5, 150, 1, "%.0f", "Distance in yards at which a waypoint is considered reached and auto-cleared. Ignored while on a taxi.", 15, -375, false)
-    CreateSlider(panelGen, "Arrow Scale", "waypointsArrowScale", 0.3, 3.0, 0.1, "%.1f", "Scale of the on-screen navigation arrow HUD.", 15, -435, false)
-    CreateSlider(panelGen, "Arrow Opacity", "waypointsArrowAlpha", 0.1, 1.0, 0.05, "%.2f", "Opacity of the on-screen navigation arrow HUD.", 15, -495, false)
+    CreateCheckbox(panelGen, "Auto-Track Corpse on Death", "corpseTracker", "Automatically drops a waypoint on your corpse upon death.", 15, -345, false)
+    CreateCheckbox(panelGen, "Play Sound on Arrival", "arrivalSound", "Plays a chime sound when reaching a waypoint.", 15, -375, false)
+    CreateSlider(panelGen, "Arrival Distance (yards)", "waypointsArrivalDist", 5, 150, 1, "%.0f", "Distance in yards at which a waypoint is considered reached and auto-cleared. Ignored while on a taxi.", 15, -435, false)
+    CreateSlider(panelGen, "Arrow Scale", "waypointsArrowScale", 0.3, 3.0, 0.1, "%.1f", "Scale of the on-screen navigation arrow HUD.", 15, -495, false)
+    CreateSlider(panelGen, "Arrow Opacity", "waypointsArrowAlpha", 0.1, 1.0, 0.05, "%.2f", "Opacity of the on-screen navigation arrow HUD.", 15, -555, false)
 
     local clearWpBtn = CreateFrame("Button", "CartoMapperClearWaypointsButton", panelGen, "UIPanelButtonTemplate")
     clearWpBtn:SetSize(160, 22)
-    clearWpBtn:SetPoint("TOPLEFT", panelGen, "TOPLEFT", 15, -545)
+    clearWpBtn:SetPoint("TOPLEFT", panelGen, "TOPLEFT", 15, -605)
     clearWpBtn:SetText("Clear All Waypoints")
     clearWpBtn:SetScript("OnClick", function()
         if CartoMapper.modules["waypoints"] and CartoMapper.modules["waypoints"].ClearAll then
