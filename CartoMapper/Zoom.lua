@@ -322,13 +322,13 @@ local function SetupWorldMapFrame()
 
     -- Adapt coordinates of quest tracker and frame positions based on WotLK sizes
     WorldMapScrollFrame:ClearAllPoints()
-    if WORLDMAP_SETTINGS.size == WORLDMAP_QUESTLIST_SIZE then
+    if WORLDMAP_SETTINGS.size == WORLDMAP_QUESTLIST_SIZE and (WorldMapQuestScrollFrame and WorldMapQuestScrollFrame:IsShown()) then
         WorldMapFrame:SetFrameStrata("FULLSCREEN")
         WorldMapScrollFrame:SetPoint("TOPLEFT", WorldMapPositioningGuide, "TOP", -726, -99)
         if WorldMapTrackQuest then
             WorldMapTrackQuest:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 8, 4)
         end
-    elseif WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
+    elseif WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE or WORLDMAP_SETTINGS.size == WORLDMAP_QUESTLIST_SIZE then
         WorldMapFrame:SetFrameStrata("HIGH")
         if WorldMapTrackQuest then
             WorldMapTrackQuest:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 16, -9)
