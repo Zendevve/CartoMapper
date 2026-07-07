@@ -137,7 +137,7 @@ function CartoMapper.CreateConfigFrame()
     contentArea:SetPoint("TOPLEFT", configFrame, "TOPLEFT", 150, -45)
 
     local scrollChild = CreateFrame("Frame", nil, contentArea)
-    scrollChild:SetSize(350, 700)
+    scrollChild:SetSize(350, 800)
     contentArea:SetScrollChild(scrollChild)
 
     contentArea:EnableMouseWheel(true)
@@ -199,6 +199,7 @@ function CartoMapper.CreateConfigFrame()
     -- Track config values
     local checkButtons = {}
     local sliders = {}
+    local editBoxes = {}
 
     -- Widget factories
     local function CreateCheckbox(panel, label, key, desc, x, y, reloadRequired)
@@ -319,6 +320,56 @@ function CartoMapper.CreateConfigFrame()
         return s
     end
 
+    local function CreateEditBox(panel, label, key, desc, x, y, width)
+        local container = CreateFrame("Frame", nil, panel)
+        container:SetSize(width or 200, 45)
+        container:SetPoint("TOPLEFT", panel, "TOPLEFT", x, y)
+
+        local title = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        title:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+        title:SetText(label)
+        title:SetTextColor(unpack(COLOR_CYAN))
+
+        local eb = CreateFrame("EditBox", "CartoMapperOpt_" .. key, container, "InputBoxTemplate")
+        eb:SetSize(width or 200, 20)
+        eb:SetPoint("TOPLEFT", container, "TOPLEFT", 5, -15)
+        eb:SetAutoFocus(false)
+        eb:SetFontObject("ChatFontNormal")
+        eb:SetTextColor(1, 1, 1)
+
+        -- Handle editing and saving
+        eb:SetScript("OnEnterPressed", function(self)
+            self:ClearFocus()
+            DB.SetOpt(key, self:GetText())
+        end)
+        eb:SetScript("OnFocusLost", function(self)
+            DB.SetOpt(key, self:GetText())
+        end)
+        eb:SetScript("OnEscapePressed", function(self)
+            self:ClearFocus()
+            self:SetText(DB.GetOpt(key) or "")
+        end)
+
+        eb:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(label, 0, 1, 0.8)
+            GameTooltip:AddLine(desc, 1, 1, 1, true)
+            GameTooltip:Show()
+        end)
+        eb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+        eb.UpdateValue = function()
+            local current = DB.GetOpt(key) or ""
+            eb:SetText(current)
+            if initialValues[key] == nil then
+                initialValues[key] = current
+            end
+        end
+
+        table.insert(editBoxes, eb)
+        return container
+    end
+
     -- Tab 1: General Options
     local panelGen = tabPanels[1]
     CreateCheckbox(panelGen, "Minimap Button", "minimapButton", "Show the circular minimap shortcut button.", 15, -15, false)
@@ -334,13 +385,17 @@ function CartoMapper.CreateConfigFrame()
     CreateCheckbox(panelGen, "Show Time-to-Arrival (ETA)", "waypointsShowETA", "Shows the estimated travel time next to the distance display on the navigation arrow.", 15, -315, false)
     CreateCheckbox(panelGen, "Auto-Track Corpse on Death", "corpseTracker", "Automatically drops a waypoint on your corpse upon death.", 15, -345, false)
     CreateCheckbox(panelGen, "Play Sound on Arrival", "arrivalSound", "Plays a chime sound when reaching a waypoint.", 15, -375, false)
-    CreateSlider(panelGen, "Arrival Distance (yards)", "waypointsArrivalDist", 5, 150, 1, "%.0f", "Distance in yards at which a waypoint is considered reached and auto-cleared. Ignored while on a taxi.", 15, -435, false)
-    CreateSlider(panelGen, "Arrow Scale", "waypointsArrowScale", 0.3, 3.0, 0.1, "%.1f", "Scale of the on-screen navigation arrow HUD.", 15, -495, false)
-    CreateSlider(panelGen, "Arrow Opacity", "waypointsArrowAlpha", 0.1, 1.0, 0.05, "%.2f", "Opacity of the on-screen navigation arrow HUD.", 15, -555, false)
+
+    CreateEditBox(panelGen, "Arrival Sound Path (Final Destination)", "finalArrivalSoundPath", "Sound file path to play when reaching your final destination.", 15, -405, 320)
+    CreateEditBox(panelGen, "Arrival Sound Path (Intermediate Gate)", "gateArrivalSoundPath", "Sound file path to play when reaching an intermediate portal or gate.", 15, -455, 320)
+
+    CreateSlider(panelGen, "Arrival Distance (yards)", "waypointsArrivalDist", 5, 150, 1, "%.0f", "Distance in yards at which a waypoint is considered reached and auto-cleared. Ignored while on a taxi.", 15, -515, false)
+    CreateSlider(panelGen, "Arrow Scale", "waypointsArrowScale", 0.3, 3.0, 0.1, "%.1f", "Scale of the on-screen navigation arrow HUD.", 15, -575, false)
+    CreateSlider(panelGen, "Arrow Opacity", "waypointsArrowAlpha", 0.1, 1.0, 0.05, "%.2f", "Opacity of the on-screen navigation arrow HUD.", 15, -635, false)
 
     local clearWpBtn = CreateFrame("Button", "CartoMapperClearWaypointsButton", panelGen, "UIPanelButtonTemplate")
     clearWpBtn:SetSize(160, 22)
-    clearWpBtn:SetPoint("TOPLEFT", panelGen, "TOPLEFT", 15, -605)
+    clearWpBtn:SetPoint("TOPLEFT", panelGen, "TOPLEFT", 15, -695)
     clearWpBtn:SetText("Clear All Waypoints")
     clearWpBtn:SetScript("OnClick", function()
         if CartoMapper.modules["waypoints"] and CartoMapper.modules["waypoints"].ClearAll then
@@ -467,6 +522,7 @@ function CartoMapper.CreateConfigFrame()
         UpdateRadioStyles()
         for _, cb in ipairs(checkButtons) do cb:UpdateValue() end
         for _, s in ipairs(sliders) do s:UpdateValue() end
+        for _, eb in ipairs(editBoxes) do eb:UpdateValue() end
     end
 
     -- Initial Select Tab

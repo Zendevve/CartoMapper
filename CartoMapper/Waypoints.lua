@@ -17,6 +17,8 @@ Waypoints.defaults = {
     waypointsShowETA = true,
     corpseTracker = true,
     arrivalSound = true,
+    finalArrivalSoundPath = "Sound\\Interface\\RaidWarning.wav",
+    gateArrivalSoundPath = "Sound\\Interface\\LevelUp.wav",
 }
 
 -- Internal state
@@ -579,7 +581,13 @@ local function Arrow_OnUpdate(self, elapsed)
         else
             lastUpdate = 0
             if CartoMapper.DB.GetOpt("arrivalSound") then
-                PlaySoundFile("Sound\\Interface\\LevelUp.wav")
+                if wp.isGate then
+                    local gateSound = CartoMapper.DB.GetOpt("gateArrivalSoundPath") or "Sound\\Interface\\LevelUp.wav"
+                    PlaySoundFile(gateSound)
+                else
+                    local finalSound = CartoMapper.DB.GetOpt("finalArrivalSoundPath") or "Sound\\Interface\\RaidWarning.wav"
+                    PlaySoundFile(finalSound)
+                end
             end
             UIErrorsFrame:AddMessage("Waypoint Reached!", 0.1, 1.0, 0.1, 1.0, 5)
             print("|cff00ff00[CartoMapper] Reached Waypoint: " .. (wp.desc or string.format("%.1f, %.1f", wp.x, wp.y)) .. "|r")
