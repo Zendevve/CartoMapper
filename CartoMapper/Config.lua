@@ -405,15 +405,31 @@ function CartoMapper.CreateConfigFrame()
 
     -- Tab 2: Map Window
     local panelWin = tabPanels[2]
-    CreateCheckbox(panelWin, "Borderless Windowed Map", "borderless", "Hides borders and bulky backdrop frames from the windowed map.", 15, -15, true)
-    CreateCheckbox(panelWin, "Click-Through Map", "clickThrough", "Makes the map click-through so you can move and steer your character. Hold Alt key to temporarily interact with the map.", 15, -45, false)
-    CreateCheckbox(panelWin, "No Fade On Cursor Hover", "NoFadeCursor", "Suspends movement fading when hovering your cursor over the map.", 15, -75, false)
-    CreateCheckbox(panelWin, "Hide Town & City Icons", "hideTownCityIcons", "Hides default Blizzard city/town icons on the continent maps.", 15, -105, true)
-    CreateCheckbox(panelWin, "Lock Map Position", "lockMap", "Prevents dragging and moving the windowed map frame.", 15, -135, false)
     
-    CreateSlider(panelWin, "Map Window Scale", "mapScale", 0.5, 4.0, 0.05, "%.2f", "Adjusts the overall scale/size of the windowed map frame. Also adjustable via Ctrl + Scroll on the map itself.", 15, -165, false)
-    CreateSlider(panelWin, "Stationary Opacity", "stationaryOpacity", 0.1, 1.0, 0.05, "%.2f", "Opacity of the map when standing still.", 15, -225, false)
-    CreateSlider(panelWin, "Moving Opacity", "movingOpacity", 0.1, 1.0, 0.05, "%.2f", "Opacity of the map when character is running.", 180, -225, false)
+    local lblWindowed = panelWin:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    lblWindowed:SetPoint("TOPLEFT", panelWin, "TOPLEFT", 15, -15)
+    lblWindowed:SetText("Windowed Mode Settings:")
+    lblWindowed:SetTextColor(unpack(COLOR_CYAN))
+
+    CreateCheckbox(panelWin, "Borderless Windowed Map", "borderless", "Hides borders and bulky backdrop frames from the windowed map.", 15, -35, true)
+    CreateCheckbox(panelWin, "Click-Through Map", "clickThrough", "Makes the windowed map click-through so you can move and steer your character. Hold Alt key to temporarily interact.", 15, -65, false)
+    CreateCheckbox(panelWin, "No Fade On Cursor Hover", "NoFadeCursor", "Suspends movement fading when hovering your cursor over the windowed map.", 15, -95, false)
+    CreateCheckbox(panelWin, "Lock Map Position", "lockMap", "Prevents dragging and moving the windowed map frame.", 15, -125, false)
+    CreateCheckbox(panelWin, "Hide Town & City Icons", "hideTownCityIcons", "Hides default Blizzard city/town icons on the continent maps.", 15, -155, true)
+    
+    CreateSlider(panelWin, "Map Window Scale", "mapScale", 0.5, 4.0, 0.05, "%.2f", "Adjusts the overall scale/size of the windowed map frame. Also adjustable via Ctrl + Scroll on the map itself.", 15, -185, false)
+    CreateSlider(panelWin, "Stationary Opacity", "stationaryOpacity", 0.1, 1.0, 0.05, "%.2f", "Opacity of the windowed map when standing still.", 15, -245, false)
+    CreateSlider(panelWin, "Moving Opacity", "movingOpacity", 0.1, 1.0, 0.05, "%.2f", "Opacity of the windowed map when character is running.", 180, -245, false)
+
+    local lblFullscreen = panelWin:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    lblFullscreen:SetPoint("TOPLEFT", panelWin, "TOPLEFT", 15, -305)
+    lblFullscreen:SetText("Fullscreen Mode Settings:")
+    lblFullscreen:SetTextColor(unpack(COLOR_CYAN))
+
+    CreateCheckbox(panelWin, "Click-Through Map", "clickThroughFullscreen", "Makes the fullscreen map click-through so you can move and steer your character. Hold Alt key to temporarily interact.", 15, -325, false)
+    CreateCheckbox(panelWin, "No Fade On Cursor Hover", "NoFadeCursorFullscreen", "Suspends movement fading when hovering your cursor over the fullscreen map.", 15, -355, false)
+    CreateSlider(panelWin, "Stationary Opacity", "stationaryOpacityFullscreen", 0.1, 1.0, 0.05, "%.2f", "Opacity of the fullscreen map when standing still.", 15, -385, false)
+    CreateSlider(panelWin, "Moving Opacity", "movingOpacityFullscreen", 0.1, 1.0, 0.05, "%.2f", "Opacity of the fullscreen map when character is running.", 180, -385, false)
 
     -- Tab 3: Zoom / Pan
     local panelZoom = tabPanels[3]

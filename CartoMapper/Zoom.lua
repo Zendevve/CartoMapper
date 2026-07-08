@@ -15,8 +15,18 @@ Zoom.alwaysEnable = true
 -- by Zoom.enabled) and Disable() resets any active zoom/pan state - see below.
 Zoom.liveToggle = true
 
+local function IsWindowedMode()
+    if WORLDMAP_SETTINGS.size == WORLDMAP_QUESTLIST_SIZE and (WorldMapQuestScrollFrame and WorldMapQuestScrollFrame:IsShown()) then
+        return true
+    elseif WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE or WORLDMAP_SETTINGS.size == WORLDMAP_QUESTLIST_SIZE then
+        return true
+    end
+    return false
+end
+
 function CartoMapper.UpdateClickThrough()
-    local clickThrough = CartoMapper.DB.GetOpt("clickThrough")
+    local isWindowed = IsWindowedMode()
+    local clickThrough = CartoMapper.DB.GetOpt(isWindowed and "clickThrough" or "clickThroughFullscreen")
     local state = true
     if clickThrough then
         if IsAltKeyDown() then
@@ -32,24 +42,28 @@ end
 
 local currentAlpha = 1.0
 function CartoMapper.UpdateMapOpacity()
+    local isWindowed = IsWindowedMode()
+    local suffix = isWindowed and "" or "Fullscreen"
     local speed = GetUnitSpeed("player")
     local moving = (speed > 0)
-    if moving and CartoMapper.DB.GetOpt("NoFadeCursor") and WorldMapFrame:IsMouseOver() then
+    if moving and CartoMapper.DB.GetOpt("NoFadeCursor" .. suffix) and WorldMapFrame:IsMouseOver() then
         moving = false
     end
-    local targetAlpha = moving and (CartoMapper.DB.GetOpt("movingOpacity") or 0.5) or (CartoMapper.DB.GetOpt("stationaryOpacity") or 1.0)
+    local targetAlpha = moving and (CartoMapper.DB.GetOpt("movingOpacity" .. suffix) or 0.5) or (CartoMapper.DB.GetOpt("stationaryOpacity" .. suffix) or 1.0)
     WorldMapFrame:SetAlpha(targetAlpha)
     currentAlpha = targetAlpha
 end
 
 local faderFrame = CreateFrame("Frame")
 faderFrame:SetScript("OnUpdate", function(self, elapsed)
+    local isWindowed = IsWindowedMode()
+    local suffix = isWindowed and "" or "Fullscreen"
     local speed = GetUnitSpeed("player")
     local moving = (speed > 0)
-    if moving and CartoMapper.DB.GetOpt("NoFadeCursor") and WorldMapFrame:IsMouseOver() then
+    if moving and CartoMapper.DB.GetOpt("NoFadeCursor" .. suffix) and WorldMapFrame:IsMouseOver() then
         moving = false
     end
-    local targetAlpha = moving and (CartoMapper.DB.GetOpt("movingOpacity") or 0.5) or (CartoMapper.DB.GetOpt("stationaryOpacity") or 1.0)
+    local targetAlpha = moving and (CartoMapper.DB.GetOpt("movingOpacity" .. suffix) or 0.5) or (CartoMapper.DB.GetOpt("stationaryOpacity" .. suffix) or 1.0)
     
     if currentAlpha ~= targetAlpha then
         local step = elapsed * 3
