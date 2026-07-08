@@ -336,6 +336,13 @@ local function SetupWorldMapFrame()
         if WorldMapTrackQuest then
             WorldMapTrackQuest:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 8, 4)
         end
+        if WorldMapQuestScrollBackground then WorldMapQuestScrollBackground:Show() end
+        if WorldMapQuestDetailScrollBackground then WorldMapQuestDetailScrollBackground:Show() end
+        if WorldMapDetailUpperBorder then WorldMapDetailUpperBorder:Show() end
+        if WorldMapDetailLowerBorder then WorldMapDetailLowerBorder:Show() end
+        if WorldMapDetailRightBorder then WorldMapDetailRightBorder:Show() end
+        if WorldMapQuestScrollBorder then WorldMapQuestScrollBorder:Show() end
+        if WorldMapQuestDetailScrollBorder then WorldMapQuestDetailScrollBorder:Show() end
     elseif WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE or WORLDMAP_SETTINGS.size == WORLDMAP_QUESTLIST_SIZE then
         WorldMapFrame:SetFrameStrata("HIGH")
         if WorldMapTrackQuest then
@@ -359,6 +366,13 @@ local function SetupWorldMapFrame()
             WorldMapScrollFrame:SetPoint("TOPLEFT", 37, -66)
             WorldMapTitleButton:SetPoint("TOPLEFT", WorldMapFrame, "TOPLEFT", 13, -14)
         end
+        if WorldMapQuestScrollBackground then WorldMapQuestScrollBackground:Hide() end
+        if WorldMapQuestDetailScrollBackground then WorldMapQuestDetailScrollBackground:Hide() end
+        if WorldMapDetailUpperBorder then WorldMapDetailUpperBorder:Hide() end
+        if WorldMapDetailLowerBorder then WorldMapDetailLowerBorder:Hide() end
+        if WorldMapDetailRightBorder then WorldMapDetailRightBorder:Hide() end
+        if WorldMapQuestScrollBorder then WorldMapQuestScrollBorder:Hide() end
+        if WorldMapQuestDetailScrollBorder then WorldMapQuestDetailScrollBorder:Hide() end
     else
         WorldMapFrame:SetFrameStrata("FULLSCREEN")
         WorldMapFrame:SetScale(1.0)
@@ -368,6 +382,13 @@ local function SetupWorldMapFrame()
         if WorldMapTrackQuest then
             WorldMapTrackQuest:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 16, -9)
         end
+        if WorldMapQuestScrollBackground then WorldMapQuestScrollBackground:Hide() end
+        if WorldMapQuestDetailScrollBackground then WorldMapQuestDetailScrollBackground:Hide() end
+        if WorldMapDetailUpperBorder then WorldMapDetailUpperBorder:Hide() end
+        if WorldMapDetailLowerBorder then WorldMapDetailLowerBorder:Hide() end
+        if WorldMapDetailRightBorder then WorldMapDetailRightBorder:Hide() end
+        if WorldMapQuestScrollBorder then WorldMapQuestScrollBorder:Hide() end
+        if WorldMapQuestDetailScrollBorder then WorldMapQuestDetailScrollBorder:Hide() end
     end
 
     WorldMapScrollFrame:SetScale(WORLDMAP_SETTINGS.size)
