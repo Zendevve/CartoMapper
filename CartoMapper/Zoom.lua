@@ -40,6 +40,15 @@ function CartoMapper.UpdateClickThrough()
     WorldMapButton:EnableMouse(state)
 end
 
+local function UpdateBorderTexturesAlpha(alpha)
+    for i = 1, 12 do
+        local tex = _G["WorldMapFrameTexture" .. i]
+        if tex then
+            tex:SetAlpha(alpha)
+        end
+    end
+end
+
 local currentAlpha = 1.0
 function CartoMapper.UpdateMapOpacity()
     local isWindowed = IsWindowedMode()
@@ -52,6 +61,12 @@ function CartoMapper.UpdateMapOpacity()
     local targetAlpha = moving and (CartoMapper.DB.GetOpt("movingOpacity" .. suffix) or 0.5) or (CartoMapper.DB.GetOpt("stationaryOpacity" .. suffix) or 1.0)
     WorldMapFrame:SetAlpha(targetAlpha)
     currentAlpha = targetAlpha
+    
+    if targetAlpha < 1.0 then
+        UpdateBorderTexturesAlpha(0)
+    else
+        UpdateBorderTexturesAlpha(1)
+    end
 end
 
 local faderFrame = CreateFrame("Frame")
@@ -73,6 +88,12 @@ faderFrame:SetScript("OnUpdate", function(self, elapsed)
             currentAlpha = math.max(targetAlpha, currentAlpha - step)
         end
         WorldMapFrame:SetAlpha(currentAlpha)
+        
+        if currentAlpha < 1.0 then
+            UpdateBorderTexturesAlpha(0)
+        else
+            UpdateBorderTexturesAlpha(1)
+        end
     end
 end)
 
