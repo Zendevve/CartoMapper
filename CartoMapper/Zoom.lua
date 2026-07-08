@@ -307,6 +307,9 @@ end
 
 local function SetupWorldMapFrame()
     if not WorldMapScrollFrame then return end
+    if BlackoutWorld then
+        BlackoutWorld:Hide()
+    end
     WorldMapScrollFrameScrollBar:Hide()
     CartoMapper.UpdateClickThrough()
     WorldMapScrollFrame.panning = false
@@ -353,6 +356,9 @@ local function SetupWorldMapFrame()
         end
     else
         WorldMapFrame:SetFrameStrata("FULLSCREEN")
+        WorldMapFrame:SetScale(1.0)
+        WorldMapFrame:SetMovable(false)
+        WorldMapFrame:RegisterForDrag()
         WorldMapScrollFrame:SetPoint("TOPLEFT", WorldMapPositioningGuide, "TOPLEFT", 11, -70.5)
         if WorldMapTrackQuest then
             WorldMapTrackQuest:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 16, -9)
