@@ -493,6 +493,7 @@ local function SetupWorldMapFrame()
     updatePointRelativeTo(WorldMapQuestDetailScrollFrame, WorldMapScrollFrame)
 
     -- Handle borderless windowed map elements initial visibility
+    local settingsBtn = _G["CartoMapperMapSettingsButton"]
     if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapper.DB.GetOpt("borderless") then
         WorldMapFrameMiniBorderLeft:Hide()
         WorldMapFrameMiniBorderRight:Hide()
@@ -501,6 +502,7 @@ local function SetupWorldMapFrame()
         WorldMapFrameCloseButton:Hide()
         WorldMapFrameSizeUpButton:Hide()
         WorldMapFrameSizeDownButton:Hide()
+        if settingsBtn then settingsBtn:Hide() end
     elseif WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
         WorldMapFrameMiniBorderLeft:Show()
         WorldMapFrameMiniBorderRight:Show()
@@ -509,6 +511,9 @@ local function SetupWorldMapFrame()
         WorldMapFrameCloseButton:Show()
         WorldMapFrameSizeUpButton:Show()
         WorldMapFrameSizeDownButton:Hide()
+        if settingsBtn then settingsBtn:Show() end
+    else
+        if settingsBtn then settingsBtn:Show() end
     end
 
     local resizeHandle = _G["CartoMapperResizeHandle"]
@@ -688,6 +693,7 @@ local function WorldMapButton_OnUpdate(self, elapsed)
     -- Handle borderless windowed map elements visibility on mouse hover
     if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
         if CartoMapper.DB.GetOpt("borderless") then
+            local settingsBtn = _G["CartoMapperMapSettingsButton"]
             if WorldMapFrame:IsMouseOver() then
                 WorldMapFrameMiniBorderLeft:Show()
                 WorldMapFrameMiniBorderRight:Show()
@@ -695,6 +701,7 @@ local function WorldMapButton_OnUpdate(self, elapsed)
                 WorldMapTitleButton:Show()
                 WorldMapFrameCloseButton:Show()
                 WorldMapFrameSizeUpButton:Show()
+                if settingsBtn then settingsBtn:Show() end
             else
                 WorldMapFrameMiniBorderLeft:Hide()
                 WorldMapFrameMiniBorderRight:Hide()
@@ -703,6 +710,7 @@ local function WorldMapButton_OnUpdate(self, elapsed)
                 WorldMapFrameCloseButton:Hide()
                 WorldMapFrameSizeUpButton:Hide()
                 WorldMapFrameSizeDownButton:Hide()
+                if settingsBtn then settingsBtn:Hide() end
             end
         end
     end
@@ -959,6 +967,49 @@ end
 function Zoom.Enable()
     if Zoom.enabled then return end
     Zoom.enabled = true
+
+    -- Create CartoMapper settings button next to size toggle buttons
+    if not _G["CartoMapperMapSettingsButton"] then
+        local settingsBtn = CreateFrame("Button", "CartoMapperMapSettingsButton", WorldMapFrame)
+        settingsBtn:SetSize(32, 32)
+        settingsBtn:SetPoint("RIGHT", WorldMapFrameSizeUpButton, "LEFT", 10, 0)
+        settingsBtn:SetFrameLevel(WorldMapFrameCloseButton:GetFrameLevel())
+        
+        settingsBtn:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
+        settingsBtn:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
+        settingsBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
+        settingsBtn:SetDisabledTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Disabled")
+        
+        local gearTex = settingsBtn:CreateTexture(nil, "OVERLAY")
+        gearTex:SetTexture("Interface\\Buttons\\UI-OptionsButton")
+        gearTex:SetSize(16, 16)
+        gearTex:SetPoint("CENTER", 0, 0)
+        settingsBtn.gear = gearTex
+        
+        settingsBtn:SetScript("OnClick", function()
+            if CartoMapper.ToggleConfigFrame then
+                CartoMapper.ToggleConfigFrame()
+            else
+                if CartoMapperConfigFrame then
+                    if CartoMapperConfigFrame:IsShown() then
+                        CartoMapperConfigFrame:Hide()
+                    else
+                        CartoMapperConfigFrame:Show()
+                        CartoMapperConfigFrame:UpdateAllValues()
+                    end
+                end
+            end
+        end)
+        
+        settingsBtn:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText("CartoMapper Settings", 1, 1, 1)
+            GameTooltip:Show()
+        end)
+        settingsBtn:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+    end
 
     -- Create the scroll frame dynamically if it doesn't exist yet
     if not WorldMapScrollFrame then

@@ -287,14 +287,17 @@ local function SlashHandler(msg)
                 DEFAULT_CHAT_FRAME:AddMessage("  " .. k .. ": " .. (CartoMapper.DB.GetOpt(k) and "|cff00ff00On|r" or "|cffff0000Off|r"))
             end
         end
-    else
-        if CartoMapperConfigFrame then
-            if CartoMapperConfigFrame:IsShown() then
-                CartoMapperConfigFrame:Hide()
-            else
-                CartoMapperConfigFrame:Show()
-                CartoMapperConfigFrame:UpdateAllValues()
-            end
+        CartoMapper.ToggleConfigFrame()
+    end
+end
+
+function CartoMapper.ToggleConfigFrame()
+    if CartoMapperConfigFrame then
+        if CartoMapperConfigFrame:IsShown() then
+            CartoMapperConfigFrame:Hide()
+        else
+            CartoMapperConfigFrame:Show()
+            CartoMapperConfigFrame:UpdateAllValues()
         end
     end
 end
