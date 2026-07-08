@@ -412,8 +412,8 @@ function CartoMapper.CreateConfigFrame()
     CreateCheckbox(panelWin, "Lock Map Position", "lockMap", "Prevents dragging and moving the windowed map frame.", 15, -135, false)
     
     CreateSlider(panelWin, "Map Window Scale", "mapScale", 0.5, 4.0, 0.05, "%.2f", "Adjusts the overall scale/size of the windowed map frame. Also adjustable via Ctrl + Scroll on the map itself.", 15, -165, false)
-    CreateSlider(panelWin, "Stationary Opacity", "stationaryOpacity", 0.1, 1.0, 0.05, "%.2f", "Opacity of the windowed map when standing still.", 15, -225, false)
-    CreateSlider(panelWin, "Moving Opacity", "movingOpacity", 0.1, 1.0, 0.05, "%.2f", "Opacity of the windowed map when character is running.", 180, -225, false)
+    CreateSlider(panelWin, "Stationary Opacity", "stationaryOpacity", 0.1, 1.0, 0.05, "%.2f", "Opacity of the map when standing still.", 15, -225, false)
+    CreateSlider(panelWin, "Moving Opacity", "movingOpacity", 0.1, 1.0, 0.05, "%.2f", "Opacity of the map when character is running.", 180, -225, false)
 
     -- Tab 3: Zoom / Pan
     local panelZoom = tabPanels[3]

@@ -32,27 +32,18 @@ end
 
 local currentAlpha = 1.0
 function CartoMapper.UpdateMapOpacity()
-    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE then
-        local speed = GetUnitSpeed("player")
-        local moving = (speed > 0)
-        if moving and CartoMapper.DB.GetOpt("NoFadeCursor") and WorldMapFrame:IsMouseOver() then
-            moving = false
-        end
-        local targetAlpha = moving and (CartoMapper.DB.GetOpt("movingOpacity") or 0.5) or (CartoMapper.DB.GetOpt("stationaryOpacity") or 1.0)
-        WorldMapFrame:SetAlpha(targetAlpha)
-        currentAlpha = targetAlpha
-    else
-        WorldMapFrame:SetAlpha(1.0)
+    local speed = GetUnitSpeed("player")
+    local moving = (speed > 0)
+    if moving and CartoMapper.DB.GetOpt("NoFadeCursor") and WorldMapFrame:IsMouseOver() then
+        moving = false
     end
+    local targetAlpha = moving and (CartoMapper.DB.GetOpt("movingOpacity") or 0.5) or (CartoMapper.DB.GetOpt("stationaryOpacity") or 1.0)
+    WorldMapFrame:SetAlpha(targetAlpha)
+    currentAlpha = targetAlpha
 end
 
 local faderFrame = CreateFrame("Frame")
 faderFrame:SetScript("OnUpdate", function(self, elapsed)
-    if WORLDMAP_SETTINGS.size ~= WORLDMAP_WINDOWED_SIZE then
-        WorldMapFrame:SetAlpha(1.0)
-        return
-    end
-    
     local speed = GetUnitSpeed("player")
     local moving = (speed > 0)
     if moving and CartoMapper.DB.GetOpt("NoFadeCursor") and WorldMapFrame:IsMouseOver() then
