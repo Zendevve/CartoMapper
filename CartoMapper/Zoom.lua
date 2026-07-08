@@ -494,6 +494,9 @@ local function SetupWorldMapFrame()
 
     -- Handle borderless windowed map elements initial visibility
     local settingsBtn = _G["CartoMapperMapSettingsButton"]
+    if settingsBtn and WorldMapFrameCloseButton then
+        settingsBtn:SetFrameLevel(WorldMapFrameCloseButton:GetFrameLevel() + 2)
+    end
     if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and CartoMapper.DB.GetOpt("borderless") then
         WorldMapFrameMiniBorderLeft:Hide()
         WorldMapFrameMiniBorderRight:Hide()
