@@ -18,7 +18,7 @@ Zoom.liveToggle = true
 function CartoMapper.UpdateClickThrough()
     local clickThrough = CartoMapper.DB.GetOpt("clickThrough")
     local state = true
-    if WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE and clickThrough then
+    if clickThrough then
         if IsAltKeyDown() then
             state = true
         else
