@@ -426,6 +426,26 @@ local function SetupWorldMapFrame()
             if WorldMapFrame_Update then
                 WorldMapFrame_Update()
             end
+
+            -- Apply texture visibility override immediately after WorldMapFrame_Update to override its show calls
+            local showQuestPanels = (WORLDMAP_SETTINGS.size == WORLDMAP_QUESTLIST_SIZE) and (WorldMapQuestScrollFrame and WorldMapQuestScrollFrame:IsShown())
+            if showQuestPanels then
+                if WorldMapQuestScrollBackground then WorldMapQuestScrollBackground:Show() end
+                if WorldMapQuestDetailScrollBackground then WorldMapQuestDetailScrollBackground:Show() end
+                if WorldMapDetailUpperBorder then WorldMapDetailUpperBorder:Show() end
+                if WorldMapDetailLowerBorder then WorldMapDetailLowerBorder:Show() end
+                if WorldMapDetailRightBorder then WorldMapDetailRightBorder:Show() end
+                if WorldMapQuestScrollBorder then WorldMapQuestScrollBorder:Show() end
+                if WorldMapQuestDetailScrollBorder then WorldMapQuestDetailScrollBorder:Show() end
+            else
+                if WorldMapQuestScrollBackground then WorldMapQuestScrollBackground:Hide() end
+                if WorldMapQuestDetailScrollBackground then WorldMapQuestDetailScrollBackground:Hide() end
+                if WorldMapDetailUpperBorder then WorldMapDetailUpperBorder:Hide() end
+                if WorldMapDetailLowerBorder then WorldMapDetailLowerBorder:Hide() end
+                if WorldMapDetailRightBorder then WorldMapDetailRightBorder:Hide() end
+                if WorldMapQuestScrollBorder then WorldMapQuestScrollBorder:Hide() end
+                if WorldMapQuestDetailScrollBorder then WorldMapQuestDetailScrollBorder:Hide() end
+            end
         end
     end)
 
