@@ -1434,22 +1434,33 @@ end
 
 -- Offline Dungeon Floor Quick-Cycling
 if WorldMapFrame then
-    WorldMapFrame:HookScript("OnKeyDown", function(self, key)
-        if not WorldMapFrame:IsShown() then return end
-        if key == "PAGEUP" or key == "PAGEDOWN" then
-            local numFloors = GetNumDungeonMapLevels()
-            if numFloors and numFloors > 1 then
-                local currentFloor = GetCurrentMapDungeonLevel()
-                local newFloor = currentFloor
-                if key == "PAGEUP" then
-                    newFloor = currentFloor + 1
-                    if newFloor > numFloors then newFloor = 1 end
-                else
-                    newFloor = currentFloor - 1
-                    if newFloor < 1 then newFloor = numFloors end
-                end
-                SetDungeonMapLevel(newFloor)
-            end
+    -- Clear default key interception to prevent map frame from consuming WASD movement
+    WorldMapFrame:SetScript("OnKeyDown", nil)
+
+    -- Create hidden buttons to handle cycling via secure override bindings
+    local cycleUp = CreateFrame("Button", "CartoMapperCycleFloorUp", WorldMapFrame)
+    cycleUp:SetScript("OnClick", function()
+        local numFloors = GetNumDungeonMapLevels()
+        if numFloors and numFloors > 1 then
+            local currentFloor = GetCurrentMapDungeonLevel()
+            local newFloor = currentFloor + 1
+            if newFloor > numFloors then newFloor = 1 end
+            SetDungeonMapLevel(newFloor)
         end
     end)
+
+    local cycleDown = CreateFrame("Button", "CartoMapperCycleFloorDown", WorldMapFrame)
+    cycleDown:SetScript("OnClick", function()
+        local numFloors = GetNumDungeonMapLevels()
+        if numFloors and numFloors > 1 then
+            local currentFloor = GetCurrentMapDungeonLevel()
+            local newFloor = currentFloor - 1
+            if newFloor < 1 then newFloor = numFloors end
+            SetDungeonMapLevel(newFloor)
+        end
+    end)
+
+    -- Register override bindings active only while WorldMapFrame is shown
+    SetOverrideBindingClick(WorldMapFrame, true, "PAGEUP", "CartoMapperCycleFloorUp")
+    SetOverrideBindingClick(WorldMapFrame, true, "PAGEDOWN", "CartoMapperCycleFloorDown")
 end
